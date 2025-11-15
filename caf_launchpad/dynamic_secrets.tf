@@ -1,7 +1,7 @@
 
 module "dynamic_keyvault_secrets" {
-  source  = "aztfmod/caf/azurerm//modules/security/dynamic_keyvault_secrets"
-  version = "5.7.13"
+  source  = "aztfmodnew/caf/azurerm//modules/security/dynamic_keyvault_secrets"
+  version = "4.45.0"
 
   for_each = try(var.dynamic_keyvault_secrets, {})
 

@@ -1,5 +1,5 @@
 module "caf" {
-  source  = "aztfmod/caf/azurerm"
+  source  = "aztfmodnew/caf/azurerm"
   version = "~>5.3.0"
 
   current_landingzone_key               = var.landingzone.key

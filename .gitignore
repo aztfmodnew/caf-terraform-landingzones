@@ -12,3 +12,39 @@
 public
 *output.json
 **/*.pyc
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Test files
+*.test.tfvars
+test-output/
+
+# Sensitive files
+*.pem
+*.key
+*.cert
+secrets.tfvars
+sensitive.tfvars
+
+# Temporary files
+tmp/
+temp/
+.tmp/

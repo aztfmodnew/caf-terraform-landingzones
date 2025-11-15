@@ -4,7 +4,7 @@ terraform {
       source = "hashicorp/kubernetes"
     }
     azurecaf = {
-      source = "aztfmod/azurecaf"
+      source = "aztfmodnew/azurecaf"
     }
   }
 }

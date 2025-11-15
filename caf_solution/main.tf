@@ -4,26 +4,26 @@ terraform {
     // azuread version driven by the caf module
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.5.0"
+      version = "~> 3.6.0"
     }
     external = {
       source  = "hashicorp/external"
-      version = "~> 2.2.0"
+      version = "~> 2.3.0"
     }
     null = {
       source  = "hashicorp/null"
-      version = "~> 3.1.0"
+      version = "~> 3.2.0"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 3.1.0"
+      version = "~> 4.0.0"
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
-      version = "~> 1.2.0"
+      source  = "aztfmodnew/azurecaf"
+      version = "~> 1.2.28"
     }
   }
-  required_version = ">= 1.3.5"
+  required_version = ">= 1.6.0"
 }
 
 provider "azuread" {
@@ -129,4 +129,3 @@ locals {
   }
 
 }
-

@@ -1,3 +1,60 @@
+## 4.44.0 (November 2025) - aztfmodnew Fork
+
+**BREAKING CHANGES:**
+
+* **Repository Fork**: This is now an independent fork maintained by aztfmodnew community after Microsoft's deprecation announcement
+* **Terraform Version**: Updated minimum required version from 1.3.5 to 1.6.0
+* **Provider Versions**: Updated all provider versions to latest stable releases
+
+**NEW FEATURES:**
+
+* **Community Maintenance**: Active community-driven development and maintenance
+* **Updated Dependencies**:
+  - azurecaf provider: ~> 1.2.28 (from 1.2.0)
+  - random provider: ~> 3.6.0 (from 3.5.0)
+  - external provider: ~> 2.3.0 (from 2.2.0)
+  - null provider: ~> 3.2.0 (from 3.1.0)
+  - tls provider: ~> 4.0.0 (from 3.1.0)
+* **Enhanced Security**: Enabled pre-commit hooks for security validation
+  - terraform_tflint for linting
+  - terraform_validate for validation
+  - terraform_tfsec for security scanning
+* **Updated CI/CD**: Rover container updated to 1.7.0-2411.0101
+* **GitHub Actions**: Updated to checkout@v4
+* **Comprehensive Documentation**: Complete README with quick start, architecture, and migration guides
+
+**IMPROVEMENTS:**
+
+* **Pre-commit Hooks**: Updated antonbabenko/pre-commit-terraform to v1.94.0
+* **Pre-commit Hooks**: Updated pre-commit-hooks to v4.6.0
+* **Enabled Validation**: Activated YAML checking with unsafe flag for custom tags
+* **Security Enhancements**: Added end-of-file-fixer and mixed-line-ending checks
+* **Large File Protection**: Added check for files larger than 1MB
+* **Module Version**: Updated aztfmod/caf module to 5.7.15
+
+**DOCUMENTATION:**
+
+* Complete rewrite of README.md with:
+  - Project status and fork information
+  - Quick start guide with examples
+  - Architecture diagrams and explanations
+  - Comprehensive requirements documentation
+  - Security best practices
+  - Monitoring and operations guidance
+  - Contributing guidelines
+  - Support channels
+
+**MIGRATION NOTES:**
+
+If migrating from azure/caf-terraform-landingzones or aztfmod/caf-terraform-landingzones:
+1. Update Terraform to >= 1.6.0
+2. Run `terraform init -upgrade` to update providers
+3. Review provider feature blocks for any deprecated options
+4. Test in non-production environment first
+5. Update CI/CD pipelines to use new Rover image (1.7.0-2411.0101)
+
+---
+
 ## 5.7.2
 
 ### rover
