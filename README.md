@@ -321,7 +321,7 @@ For enterprise support, training, or consulting services, please contact the mai
 This project builds upon the excellent work of:
 
 - Microsoft Azure CAF Team - Original landing zone design
-- aztfmod Community - Foundation modules and patterns
+- aztfmodnew Community - Foundation modules and patterns
 - Terraform Community - Best practices and tooling
 
 ---

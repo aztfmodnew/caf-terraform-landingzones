@@ -406,7 +406,7 @@ az account show --query "{subscriptionId:id, name:name, state:state}" -o table
 # ⚠️ Stop here if subscription is wrong!
 
 # 3. Verify Rover is available (if not using agent)
-which rover  # or: docker pull aztfmod/rover:1.7.0-2411.0101
+which rover  # or: docker pull aztfmodnew/rover:1.7.0-2411.0101
 
 # 4. Check terraform is initialized
 terraform -v  # version >= 1.6.0

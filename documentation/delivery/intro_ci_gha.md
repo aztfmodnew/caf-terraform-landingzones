@@ -61,7 +61,7 @@ jobs:
           convention: ["random", "cafrandom"]
 
     container:
-      image: aztfmod/rover:2005.1510
+      image: aztfmodnew/rover:2005.1510
       options: --user 0
 
     steps:
@@ -101,7 +101,7 @@ caf_foundations:
           environment: ["integration-tests"]
 
     container:
-      image: aztfmod/rover:2005.1510
+      image: aztfmodnew/rover:2005.1510
       options: --user 0
 
     steps:
@@ -155,7 +155,7 @@ Once the fundamentals are set, we can now proceed to deploy the test landing zon
           environment: ["integration-tests"]
 
     container:
-      image: aztfmod/rover:2005.1510
+      image: aztfmodnew/rover:2005.1510
       options: --user 0
 
     steps:
@@ -224,7 +224,7 @@ level0_destroy:
           convention: ["random", "cafrandom"]
 
     container:
-      image: aztfmod/rover:2005.1510
+      image: aztfmodnew/rover:2005.1510
       options: --user 0
 
     steps:

@@ -262,7 +262,7 @@ jobs:
   launchpad:
     runs-on: ubuntu-latest
     container:
-      image: aztfmod/rover:1.7.0-2411.0101  # Always use versioned image
+      image: aztfmodnew/rover:1.7.0-2411.0101  # Always use versioned image
       options: --user 0
     
     steps:
@@ -491,7 +491,7 @@ terraform init -upgrade
 **Solution:**
 ```bash
 # Run rover with explicit user
-docker run --rm -it --user $(id -u):$(id -g) aztfmod/rover:1.7.0-2411.0101 bash
+docker run --rm -it --user $(id -u):$(id -g) aztfmodnew/rover:1.7.0-2411.0101 bash
 
 # Or use Rover's built-in commands (automatically handles permissions)
 rover login
@@ -529,7 +529,7 @@ rover -lz ... -a plan
 3. **Leverage scenario folders** - Don't modify examples, create new scenarios
 4. **Test in isolation** - Use separate `-env` flag per test: `--environment dev123`
 5. **Document dependencies** - Update `landingzone.tfvars` tfstates map when adding cross-level refs
-6. **Version control Rover** - Use specific image tags: `aztfmod/rover:1.7.0-2411.0101`, not `:latest`
+6. **Version control Rover** - Use specific image tags: `aztfmodnew/rover:1.7.0-2411.0101`, not `:latest`
 7. **Read logs** - Rover logs are in `${TF_DATA_DIR}` (defaults to `/tf/caf`)
 
 ---

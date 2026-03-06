@@ -192,7 +192,7 @@ terraform {
       version = "~> 4.0.0"  # Updated
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
+      source  = "aztfmodnew/azurecaf"
       version = "~> 1.2.28"  # Updated
     }
   }
@@ -326,7 +326,7 @@ terraform apply solution-upgrade.tfplan
 # .github/workflows/deploy-landingzone.yml
 
 container:
-  image: aztfmod/rover:1.7.0-2411.0101  # Updated
+  image: aztfmodnew/rover:1.7.0-2411.0101  # Updated
   options: --user 0
 
 steps:
@@ -339,7 +339,7 @@ steps:
 # azure-pipelines.yml
 
 container:
-  image: aztfmod/rover:1.7.0-2411.0101  # Updated
+  image: aztfmodnew/rover:1.7.0-2411.0101  # Updated
 ```
 
 **For Terraform Cloud:**
