@@ -4,6 +4,8 @@
 [![Terraform Version](https://img.shields.io/badge/terraform-%3E%3D1.6.0-623ce4)](https://www.terraform.io/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+> 🚀 **New to this workspace?** Start with [WORKSPACE.md](../WORKSPACE.md) for navigation and [.github/AGENTS.md](.github/AGENTS.md) for deployment agents.
+
 > **Important Notice**: This is an **independent fork and continuation** of the original Microsoft Azure CAF Terraform Landing Zones project, maintained by the aztfmodnew community.
 
 ## 📌 About This Fork

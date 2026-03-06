@@ -1,3 +1,22 @@
+---
+landingzone_context: caf-terraform-landingzones
+expertise: [terraform-orchestration, azure-landing-zones, state-federation, deployment-patterns]
+related_agents:
+  - CAF Orchestrator
+  - Remote State Orchestrator
+  - Migration Assistant
+  - Documentation Sync
+  - Compliance Validator
+related_docs:
+  - .github/AGENTS.md (Agent reference)
+  - ../../WORKSPACE.md (Multi-repo navigation)
+key_concepts:
+  - "Landing zone levels: L0 (Launchpad) → L4 (Applications)"
+  - "Remote state federation for cross-level references"
+  - "Rover-based deployment orchestration"
+quick_start: "Deploy Level 0 first: rover -lz caf_launchpad -launchpad -a apply"
+---
+
 # Azure CAF Terraform Landing Zones - AI Coding Agent Guide
 
 > **Community Fork**: This is an actively maintained fork by aztfmodnew, continuing Microsoft's deprecated Azure CAF Landing Zones project.

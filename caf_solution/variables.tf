@@ -78,6 +78,15 @@ variable "global_settings_override" {
   default = {}
 }
 
+variable "slug_version" {
+  description = "Map of resource types to slug versions (legacy or modern). Used for backward compatibility with azurecaf provider v3.x naming."
+  type        = map(string)
+  default = {
+    "azurerm_mssql_database"    = "legacy"
+    "azurerm_mssql_elasticpool" = "legacy"
+  }
+}
+
 variable "rover_version" {
   default = "caf_standalone"
 }
