@@ -172,7 +172,7 @@ terraform {
       version = ">= 4.0.0"
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
+      source  = "aztfmodnew/azurecaf"
       version = ">= 1.2.28"
     }
     azuread = {
