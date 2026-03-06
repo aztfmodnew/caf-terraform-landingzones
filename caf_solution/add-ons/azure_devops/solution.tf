@@ -1,6 +1,7 @@
 module "caf" {
-  source  = "aztfmodnew/caf/azurerm"
-  version = "4.49.1"
+  # source  = "aztfmodnew/caf/azurerm"
+  # version = "4.49.1"
+  source = "/tf/caf-module"
 
   current_landingzone_key               = var.landingzone.key
   tenant_id                             = var.tenant_id

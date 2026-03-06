@@ -1,6 +1,7 @@
 module "caf" {
-  source  = "aztfmodnew/caf/azurerm"
-  version = "4.49.1"
+  # source  = "aztfmodnew/caf/azurerm"
+  # version = "4.49.1"
+  source = "/tf/caf-module"
 
   providers = {
     azurerm.vhub = azurerm.vhub
