@@ -74,6 +74,13 @@ variable "slug_version" {
     "azurerm_mssql_database"    = "legacy"
     "azurerm_mssql_elasticpool" = "legacy"
   }
+
+  validation {
+    condition = alltrue([
+      for v in values(var.slug_version) : contains(["legacy", "modern"], lower(v))
+    ])
+    error_message = "All slug_version values must be either 'legacy' or 'modern'."
+  }
 }
 
 variable "log_analytics" {
