@@ -274,3 +274,30 @@ variable "random_strings" {
 variable "data_sources" {
   default = {}
 }
+
+variable "invoice_sections" {
+  description = "Billing invoice sections configuration objects"
+  default     = {}
+}
+
+variable "preview_features" {
+  description = "Map of Azure preview features to enable, grouped by namespace."
+  type        = any
+  default     = {}
+}
+
+variable "resource_provider_registration" {
+  description = "Resource provider registration configuration objects"
+  default     = {}
+}
+
+variable "load_test" {
+  description = "Load test configuration objects"
+  default     = {}
+}
+
+variable "powerbi_embedded" {
+  description = "Power BI Embedded configuration objects"
+  default     = {}
+}
+}
