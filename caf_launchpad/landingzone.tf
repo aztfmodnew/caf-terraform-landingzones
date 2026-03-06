@@ -4,10 +4,6 @@ module "launchpad" {
   source = "/tf/caf-module"
   # source = "git::https://github.com/aztfmodnew/terraform-azurerm-caf.git?ref=main"
 
-  providers = {
-    azurerm.vhub = azurerm.vhub
-  }
-
   current_landingzone_key               = var.landingzone.key
   custom_role_definitions               = var.custom_role_definitions
   data_sources                          = var.data_sources
