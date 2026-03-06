@@ -78,6 +78,15 @@ variable "global_settings_override" {
   default = {}
 }
 
+variable "slug_version" {
+  description = "Map of resource types to slug versions (legacy or modern). Used for backward compatibility with azurecaf provider v3.x naming."
+  type        = map(string)
+  default = {
+    "azurerm_mssql_database"    = "legacy"
+    "azurerm_mssql_elasticpool" = "legacy"
+  }
+}
+
 variable "rover_version" {
   default = "caf_standalone"
 }
@@ -264,4 +273,31 @@ variable "random_strings" {
 }
 variable "data_sources" {
   default = {}
+}
+
+variable "invoice_sections" {
+  description = "Billing invoice sections configuration objects"
+  default     = {}
+}
+
+variable "preview_features" {
+  description = "Map of Azure preview features to enable, grouped by namespace."
+  type        = any
+  default     = {}
+}
+
+variable "resource_provider_registration" {
+  description = "Resource provider registration configuration objects"
+  default     = {}
+}
+
+variable "load_test" {
+  description = "Load test configuration objects"
+  default     = {}
+}
+
+variable "powerbi_embedded" {
+  description = "Power BI Embedded configuration objects"
+  default     = {}
+}
 }

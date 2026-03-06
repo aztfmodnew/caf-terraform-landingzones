@@ -64,7 +64,7 @@ The rover executed in launchpad mode performs the following option to bootstrap 
     * hashicorp/azurerm
     * hashicorp/azuread
     * hashicorp/random
-    * aztfmod/azurecaf
+    * aztfmodnew/azurecaf
     * hashicorp/null
 
     The latest version of the Launchpad relies on the new capabilities of **Terraform 0.13**

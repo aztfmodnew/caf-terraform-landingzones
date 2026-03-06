@@ -4,26 +4,26 @@ terraform {
     // azuread version driven by the caf module
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.6.0"
+      version = "~> 3.6"
     }
     external = {
       source  = "hashicorp/external"
-      version = "~> 2.3.0"
+      version = "~> 2.3"
     }
     null = {
       source  = "hashicorp/null"
-      version = "~> 3.2.0"
+      version = "~> 3.2"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0.0"
+      version = "~> 4.0"
     }
     azurecaf = {
       source  = "aztfmodnew/azurecaf"
-      version = "~> 1.2.28"
+      version = ">= 3.1.0"
     }
   }
-  required_version = ">= 1.6.0"
+  required_version = ">= 1.8.0"
 }
 
 provider "azuread" {
@@ -85,8 +85,8 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  alias                      = "vhub"
-  skip_provider_registration = true
+  alias                           = "vhub"
+  resource_provider_registrations = "none"
   features {}
   subscription_id = local.connectivity_subscription_id
   tenant_id       = local.connectivity_tenant_id

@@ -1,8 +1,10 @@
 # Azure Cloud Adoption Framework - Terraform Landing Zones
 
 [![Maintained by aztfmodnew](https://img.shields.io/badge/maintained%20by-aztfmodnew-blue)](https://github.com/aztfmodnew)
-[![Terraform Version](https://img.shields.io/badge/terraform-%3E%3D1.6.0-623ce4)](https://www.terraform.io/)
+[![Terraform Version](https://img.shields.io/badge/terraform-%3E%3D1.8.0-623ce4)](https://www.terraform.io/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+> 🚀 **New to this workspace?** Start with [WORKSPACE.md](../WORKSPACE.md) for navigation and [.github/AGENTS.md](.github/AGENTS.md) for deployment agents.
 
 > **Important Notice**: This is an **independent fork and continuation** of the original Microsoft Azure CAF Terraform Landing Zones project, maintained by the aztfmodnew community.
 
@@ -23,7 +25,7 @@ If you're migrating from `azure/caf-terraform-landingzones` or `aztfmod/caf-terr
 **Key Differences:**
 - ✅ **Actively maintained** (vs. deprecated original)
 - ✅ **Updated provider versions** (azurerm >= 4.0, azurecaf >= 1.2.28)
-- ✅ **Latest Terraform version support** (>= 1.6.0)
+- ✅ **Latest Terraform version support** (>= 1.8.0)
 - ✅ **Security-first approach** with enabled pre-commit hooks
 - ✅ **Enhanced documentation and examples**
 
@@ -33,7 +35,7 @@ If you're migrating from `azure/caf-terraform-landingzones` or `aztfmod/caf-terr
 
 ### Prerequisites
 
-- **Terraform**: >= 1.6.0
+- **Terraform**: >= 1.8.0
 - **Azure CLI**: Latest version
 - **Rover**: >= 1.7.0 (or use Docker container)
 - **Azure Subscription**: With appropriate permissions
@@ -170,7 +172,7 @@ terraform {
       version = ">= 4.0.0"
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
+      source  = "aztfmodnew/azurecaf"
       version = ">= 1.2.28"
     }
     azuread = {
@@ -319,7 +321,7 @@ For enterprise support, training, or consulting services, please contact the mai
 This project builds upon the excellent work of:
 
 - Microsoft Azure CAF Team - Original landing zone design
-- aztfmod Community - Foundation modules and patterns
+- aztfmodnew Community - Foundation modules and patterns
 - Terraform Community - Best practices and tooling
 
 ---

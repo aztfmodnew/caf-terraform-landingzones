@@ -192,13 +192,54 @@ terraform {
       version = "~> 4.0.0"  # Updated
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
+      source  = "aztfmodnew/azurecaf"
       version = "~> 1.2.28"  # Updated
     }
   }
   required_version = ">= 1.6.0"  # Updated
 }
 ```
+
+#### Step 4.1: Migrate Provider State (CRITICAL)
+
+⚠️ **IMPORTANT**: When you change the provider namespace from `aztfmod/azurecaf` to `aztfmodnew/azurecaf`, Terraform treats it as a completely different provider and will attempt to **DESTROY and RECREATE** all resources using naming conventions.
+
+You **MUST** run this command to tell Terraform the provider namespace changed:
+
+```bash
+# Navigate to each deployment (launchpad, solution, etc.)
+cd caf_launchpad
+
+# Replace provider state - THIS PREVENTS RESOURCE RECREATION
+terraform state replace-provider \
+  registry.terraform.io/aztfmod/azurecaf \
+  registry.terraform.io/aztfmodnew/azurecaf
+
+# Repeat for each deployment that uses azurecaf provider
+cd ../caf_solution
+terraform state replace-provider \
+  registry.terraform.io/aztfmod/azurecaf \
+  registry.terraform.io/aztfmodnew/azurecaf
+```
+
+**Expected Output**:
+```
+Terraform will perform the following actions:
+
+  ~ Provider registry.terraform.io/aztfmod/azurecaf
+    └─ registry.terraform.io/aztfmodnew/azurecaf
+
+Changing 1 provider schema...
+```
+
+**Verification**:
+```bash
+# Check state file to confirm provider namespace changed
+terraform show | grep "provider\["
+# Should show: provider["registry.terraform.io/aztfmodnew/azurecaf"]
+```
+
+> 💡 **Why this is critical**: Without this step, `terraform plan` will show that ALL resources using azurecaf naming (resource groups, storage accounts, key vaults, etc.) will be destroyed and recreated, causing production outage!
 
 ### Phase 2: Test in Non-Production (Day 1-2)
 
@@ -326,7 +367,7 @@ terraform apply solution-upgrade.tfplan
 # .github/workflows/deploy-landingzone.yml
 
 container:
-  image: aztfmod/rover:1.7.0-2411.0101  # Updated
+  image: aztfmodnew/rover:1.7.0-2411.0101  # Updated
   options: --user 0
 
 steps:
@@ -339,7 +380,7 @@ steps:
 # azure-pipelines.yml
 
 container:
-  image: aztfmod/rover:1.7.0-2411.0101  # Updated
+  image: aztfmodnew/rover:1.7.0-2411.0101  # Updated
 ```
 
 **For Terraform Cloud:**
@@ -463,6 +504,36 @@ If issues discovered later:
 ## Troubleshooting
 
 ### Common Issues
+
+#### Issue 0: Terraform Plans to Destroy/Recreate All Resources (CRITICAL)
+
+⚠️ **Symptom**: After updating provider source to `aztfmodnew/azurecaf`, running `terraform plan` shows:
+
+```
+Plan: 50 to add, 0 to change, 50 to destroy.
+
+  # azurecaf_name.rg will be destroyed
+  # azurecaf_name.storage will be destroyed
+  # azurecaf_name.keyvault will be destroyed
+  ...
+```
+
+**Root Cause**: You changed the provider namespace but didn't update the Terraform state to reflect this change.
+
+**Solution**:
+```bash
+# STOP! Do NOT run terraform apply
+# First, migrate the provider state:
+
+terraform state replace-provider \
+  registry.terraform.io/aztfmod/azurecaf \
+  registry.terraform.io/aztfmodnew/azurecaf
+
+# Now run plan again - should show "No changes"
+terraform plan
+```
+
+**Prevention**: Always run `terraform state replace-provider` BEFORE `terraform init -upgrade` when changing provider namespaces. See [Step 4.1](#step-41-migrate-provider-state-critical) in migration steps.
 
 #### Issue 1: Provider Version Conflicts
 

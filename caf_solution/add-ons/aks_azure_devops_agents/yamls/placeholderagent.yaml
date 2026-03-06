@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: rover-agent
-          image: aztfmod/rover-agent:0.15.1-2105.041640-preview-azdo
+          image: aztfmodnew/rover-agent:0.15.1-2105.041640-preview-azdo
           env:
             - name: VSTS_AGENT_INPUT_URL
               value: "https://dev.azure.com/contoso_sre"

@@ -54,7 +54,8 @@ locals {
     try(data.terraform_remote_state.remote[var.landingzone.global_settings_key].outputs.global_settings, null),
     try(data.terraform_remote_state.remote[keys(var.landingzone.tfstates)[0]].outputs.global_settings, null),
     local.custom_variables,
-    var.global_settings_override
+    var.global_settings_override,
+    { slug_version = var.slug_version }
   )
 
 

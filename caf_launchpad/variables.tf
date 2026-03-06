@@ -67,6 +67,22 @@ variable "use_slug" {
   default = true
 }
 
+variable "slug_version" {
+  description = "Map of resource types to slug versions (legacy or modern). Used for backward compatibility with azurecaf provider v3.x naming."
+  type        = map(string)
+  default = {
+    "azurerm_mssql_database"    = "legacy"
+    "azurerm_mssql_elasticpool" = "legacy"
+  }
+
+  validation {
+    condition = alltrue([
+      for v in values(var.slug_version) : contains(["legacy", "modern"], lower(v))
+    ])
+    error_message = "All slug_version values must be either 'legacy' or 'modern'."
+  }
+}
+
 variable "log_analytics" {
   default = {}
 }
