@@ -6,3 +6,13 @@ variables_azure_landing_zones:
       caf_landingzone_branch: int-5.6.0
     v1.1.1:
       caf_landingzone_branch: int-5.6.0
+  library_sources:
+    default: embedded
+    supported:
+      - embedded
+      - external
+  feature_flags:
+    enable_amba: false
+    enable_slz: false
+    amba_version: "main"   # Pin to a specific AMBA git tag (e.g., "2024-03-01") or use "main" for latest
+    slz_version: "main"    # Pin to a specific SLZ git tag or use "main" for latest

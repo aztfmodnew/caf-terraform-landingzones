@@ -14,6 +14,13 @@ bootstrap:
         clean_up_destination_folder: True
         update_lib_folder: True
         version_to_deploy: "v2.1.0"
+        alz_library:
+          source: "embedded"
+          version: "v2.1.0"
+          enable_amba: False
+          enable_slz: False
+          # amba_version: "main"   # Optional: pin to a specific AMBA git tag or branch
+          # slz_version: "main"    # Optional: pin to a specific SLZ git tag or branch
 
   # subscription_deployment_mode: single_reuse
 

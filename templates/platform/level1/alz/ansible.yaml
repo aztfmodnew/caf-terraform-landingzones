@@ -5,12 +5,26 @@
     level: "{{tfstate_object.level}}"
     definition_source_folder: "{{platform_definition_folder}}/alz/{{ tfstate}}"
     template_source_folder: "{{public_templates_folder}}/{{tfstate_object.template_lib_folder}}"
+    alz_library_source: "{{ tfstate_object.alz_library_source | default('embedded') }}"
+    enable_amba: "{{ tfstate_object.enable_amba | default(False) }}"
+    enable_slz: "{{ tfstate_object.enable_slz | default(False) }}"
+    amba_version: "{{ tfstate_object.amba_version | default('main') }}"
+    slz_version: "{{ tfstate_object.slz_version | default('main') }}"
     verbosity: 2
+
+- name: "{{ level }}-{{ tfstate }} | Validate ALZ library source"
+  fail:
+    msg: "alz_library_source='{{ alz_library_source }}' is not supported yet in this release. Use 'embedded'."
+  when:
+    - alz_library_source != 'embedded'
 
 - debug:
     msg: 
       - "{{destination_path}}"
       - "alz-overrite"
+      - "alz_library_source={{ alz_library_source }}"
+      - "enable_amba={{ enable_amba }}"
+      - "enable_slz={{ enable_slz }}"
 
 - name: "{{ level }}-{{ tfstate }} |  Clean-up base directory"
   shell: |
@@ -79,3 +93,138 @@
     force: yes
   with_fileglob:
     - "{{ definition_source_folder }}/*.tfvars.j2"
+
+# -----------------------------------------------------------------------
+# AMBA (Azure Monitor Baseline Alerts) integration
+# Enabled when: bootstrap.management_groups[region][tfstate].enable_amba: True
+# Source: https://github.com/Azure/azure-monitor-baseline-alerts
+# -----------------------------------------------------------------------
+
+- name: "{{ level }}-{{ tfstate }} | AMBA - Ensure lib subdirectories exist"
+  when: enable_amba | bool
+  shell: |
+    mkdir -p "{{ destination_path }}/lib/policy_definitions"
+    mkdir -p "{{ destination_path }}/lib/policy_set_definitions"
+    mkdir -p "{{ destination_path }}/lib/policy_assignments"
+    mkdir -p "{{ destination_path }}/lib/archetype_definitions"
+    mkdir -p "{{ destination_path }}/lib/role_definitions"
+
+- name: "{{ level }}-{{ tfstate }} | AMBA - Clone Azure Monitor Baseline Alerts (version={{ amba_version }})"
+  git:
+    repo: "https://github.com/Azure/azure-monitor-baseline-alerts.git"
+    dest: "/tmp/amba_{{ tfstate_object.tfstate_key_name }}"
+    version: "{{ amba_version }}"
+    depth: 1
+    force: true
+  when: enable_amba | bool
+  register: amba_clone
+  ignore_errors: true
+
+- name: "{{ level }}-{{ tfstate }} | AMBA - Warn if clone failed"
+  debug:
+    msg: "WARNING: Failed to clone AMBA repository. AMBA policies will NOT be included. Check network connectivity."
+  when:
+    - enable_amba | bool
+    - amba_clone is failed
+
+- name: "{{ level }}-{{ tfstate }} | AMBA - Merge policy files into lib"
+  shell: |
+    AMBA_SRC="/tmp/amba_{{ tfstate_object.tfstate_key_name }}/patterns/alz/lib"
+    DEST="{{ destination_path }}/lib"
+
+    if [ ! -d "${AMBA_SRC}" ]; then
+      echo "ERROR: AMBA lib path not found at ${AMBA_SRC}"
+      exit 1
+    fi
+
+    for subdir in policy_definitions policy_set_definitions policy_assignments archetype_definitions role_definitions; do
+      if [ -d "${AMBA_SRC}/${subdir}" ]; then
+        mkdir -p "${DEST}/${subdir}"
+        cp -rf "${AMBA_SRC}/${subdir}/." "${DEST}/${subdir}/"
+        echo "Copied AMBA ${subdir}"
+      fi
+    done
+  when:
+    - enable_amba | bool
+    - amba_clone is succeeded
+  register: amba_merge
+  ignore_errors: true
+
+- name: "{{ level }}-{{ tfstate }} | AMBA - Cleanup temp directory"
+  shell: rm -rf "/tmp/amba_{{ tfstate_object.tfstate_key_name }}"
+  when: enable_amba | bool
+  ignore_errors: true
+
+# -----------------------------------------------------------------------
+# SLZ (Sovereign Landing Zone) integration
+# Enabled when: bootstrap.management_groups[region][tfstate].enable_slz: True
+# Source: https://github.com/Azure/sovereign-landing-zone
+# -----------------------------------------------------------------------
+
+- name: "{{ level }}-{{ tfstate }} | SLZ - Ensure lib subdirectories exist"
+  when: enable_slz | bool
+  shell: |
+    mkdir -p "{{ destination_path }}/lib/policy_definitions"
+    mkdir -p "{{ destination_path }}/lib/policy_set_definitions"
+    mkdir -p "{{ destination_path }}/lib/policy_assignments"
+    mkdir -p "{{ destination_path }}/lib/archetype_definitions"
+    mkdir -p "{{ destination_path }}/lib/role_definitions"
+
+- name: "{{ level }}-{{ tfstate }} | SLZ - Clone Sovereign Landing Zone (version={{ slz_version }})"
+  git:
+    repo: "https://github.com/Azure/sovereign-landing-zone.git"
+    dest: "/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
+    version: "{{ slz_version }}"
+    depth: 1
+    force: true
+  when: enable_slz | bool
+  register: slz_clone
+  ignore_errors: true
+
+- name: "{{ level }}-{{ tfstate }} | SLZ - Warn if clone failed"
+  debug:
+    msg: "WARNING: Failed to clone SLZ repository. SLZ policies will NOT be included. Check network connectivity."
+  when:
+    - enable_slz | bool
+    - slz_clone is failed
+
+- name: "{{ level }}-{{ tfstate }} | SLZ - Merge policy files into lib"
+  shell: |
+    SLZ_REPO="/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
+    DEST="{{ destination_path }}/lib"
+
+    # Resolve the correct lib path within the SLZ repository
+    SLZ_SRC=""
+    for candidate in \
+      "${SLZ_REPO}/orchestration/alzLib" \
+      "${SLZ_REPO}/modules/policy/lib" \
+      "${SLZ_REPO}/lib"; do
+      if [ -d "${candidate}" ]; then
+        SLZ_SRC="${candidate}"
+        echo "Found SLZ lib at: ${SLZ_SRC}"
+        break
+      fi
+    done
+
+    if [ -z "${SLZ_SRC}" ]; then
+      echo "ERROR: SLZ lib path not found in cloned repository at ${SLZ_REPO}"
+      exit 1
+    fi
+
+    for subdir in policy_definitions policy_set_definitions policy_assignments archetype_definitions role_definitions; do
+      if [ -d "${SLZ_SRC}/${subdir}" ]; then
+        mkdir -p "${DEST}/${subdir}"
+        cp -rf "${SLZ_SRC}/${subdir}/." "${DEST}/${subdir}/"
+        echo "Copied SLZ ${subdir}"
+      fi
+    done
+  when:
+    - enable_slz | bool
+    - slz_clone is succeeded
+  register: slz_merge
+  ignore_errors: true
+
+- name: "{{ level }}-{{ tfstate }} | SLZ - Cleanup temp directory"
+  shell: rm -rf "/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
+  when: enable_slz | bool
+  ignore_errors: true

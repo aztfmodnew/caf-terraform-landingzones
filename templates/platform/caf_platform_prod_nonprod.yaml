@@ -296,6 +296,12 @@ management_groups:
       clean_up_destination_folder: {{bootstrap.management_groups[region].es.clean_up_destination_folder | default(True)}}
       update_lib_folder: {{bootstrap.management_groups[region].es.update_lib_folder | default(True)}}
       version_to_deploy: "{{bootstrap.management_groups[region].es.version_to_deploy | default('v1.1.3')}}"
+      alz_library_source: "{{bootstrap.management_groups[region].es.alz_library.source | default('embedded')}}"
+      alz_library_version: "{{bootstrap.management_groups[region].es.alz_library.version | default(bootstrap.management_groups[region].es.version_to_deploy | default('v1.1.3'))}}"
+      enable_amba: {{bootstrap.management_groups[region].es.alz_library.enable_amba | default(False)}}
+      enable_slz: {{bootstrap.management_groups[region].es.alz_library.enable_slz | default(False)}}
+      amba_version: "{{bootstrap.management_groups[region].es.alz_library.amba_version | default('main')}}"
+      slz_version: "{{bootstrap.management_groups[region].es.alz_library.slz_version | default('main')}}"
 {% if bootstrap.management_groups[region].es.root_parent_id is defined %}
       root_parent_id: "{{bootstrap.management_groups[region][key].root_parent_id}}"
 {% endif %}
@@ -308,7 +314,12 @@ management_groups:
         template_lib_folder: platform/level1/alz
         sub_template_folder: platform/level1/alz
         yaml: platform/level1/alz/ansible.yaml
-        alz_version: v1.1.3
+        alz_version: "{{bootstrap.management_groups[region].es.alz_library.version | default(bootstrap.management_groups[region].es.version_to_deploy | default('v1.1.3'))}}"
+        alz_library_source: "{{bootstrap.management_groups[region].es.alz_library.source | default('embedded')}}"
+        enable_amba: {{bootstrap.management_groups[region].es.alz_library.enable_amba | default(False)}}
+        enable_slz: {{bootstrap.management_groups[region].es.alz_library.enable_slz | default(False)}}
+        amba_version: "{{bootstrap.management_groups[region].es.alz_library.amba_version | default('main')}}"
+        slz_version: "{{bootstrap.management_groups[region].es.alz_library.slz_version | default('main')}}"
         # Do not rename the item_key_name
         tfstate_key_name: alz_{{alz_mg_prefix}}
 {% endfor %}

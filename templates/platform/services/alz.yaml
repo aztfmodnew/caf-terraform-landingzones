@@ -13,7 +13,12 @@ alz_{{item}}:
     config_file: alz_{{item}}.yaml
     template_lib_folder: platform/level1/alz
     sub_template_folder: platform/level1/alz
-    alz_version: {{topology.management_groups[region][item].version_to_deploy | default('v2.1.0')}}
+    alz_version: {{topology.management_groups[region][item].alz_library_version | default(topology.management_groups[region][item].version_to_deploy | default('v2.1.0'))}}
+    alz_library_source: {{topology.management_groups[region][item].alz_library_source | default('embedded')}}
+    enable_amba: {{topology.management_groups[region][item].enable_amba | default(False)}}
+    enable_slz: {{topology.management_groups[region][item].enable_slz | default(False)}}
+    amba_version: "{{topology.management_groups[region][item].amba_version | default('main')}}"
+    slz_version: "{{topology.management_groups[region][item].slz_version | default('main')}}"
     yaml: platform/level1/alz/ansible.yaml
     # Do not rename the item_key_name
     tfstate_key_name: alz_{{item}}
