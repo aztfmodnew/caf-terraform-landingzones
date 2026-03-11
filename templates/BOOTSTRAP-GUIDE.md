@@ -221,10 +221,19 @@ bootstrap:
 
 - `source: embedded` ✅ supported (default)
 - `source: external` ⚠️ reserved for next phase (currently fails fast with a clear message)
-- `enable_amba` ✅ implemented — clones `Azure/azure-monitor-baseline-alerts` from GitHub and merges `patterns/alz/lib/` into the ALZ lib folder
-- `enable_slz` ✅ implemented — clones `Azure/sovereign-landing-zone` from GitHub and merges sovereignty policy files into the ALZ lib folder
-- `amba_version` ✅ optional — defaults to `"main"`, can be set to any git tag or branch
-- `slz_version` ✅ optional — defaults to `"main"`, can be set to any git tag or branch
+- `enable_amba` ⚠️ **recorded but not auto-deployed** — AMBA (Azure Monitor Baseline Alerts) provides
+  policies in ARM/Bicep format only; these are **not compatible** with the `terraform-azurerm-caf-enterprise-scale`
+  `library_path` format. Deploy AMBA using the dedicated Terraform AVM modules after the platform LZ is up:
+  - `Azure/avm-ptn-monitoring-amba-alz/azurerm` — provisions AMBA resources
+  - `Azure/avm-ptn-alz/azurerm` — assigns AMBA policies via the `alz` provider
+  - See: https://aka.ms/amba/alz
+- `enable_slz` ⚠️ **recorded but not auto-deployed** — SLZ (Sovereign Landing Zone) provides policies in
+  ARM/Bicep format using `${varTargetManagementGroupResourceId}` scope placeholders, which are incompatible
+  with the `${current_scope_resource_id}` format required by `library_path`. Deploy SLZ using the SLZ Bicep
+  orchestration or manually convert policy JSON files.
+  - See: https://github.com/Azure/sovereign-landing-zone
+- `amba_version` — optional field, recorded for reference (used if AMBA is deployed separately)
+- `slz_version` — optional field, recorded for reference (used if SLZ is deployed separately)
 
 This lets you standardize a common model across all landing zones while enabling progressive rollout by environment or business domain.
 

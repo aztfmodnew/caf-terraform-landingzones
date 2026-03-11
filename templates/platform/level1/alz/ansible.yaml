@@ -96,133 +96,50 @@
 
 # -----------------------------------------------------------------------
 # AMBA (Azure Monitor Baseline Alerts) integration
-# Enabled when: bootstrap.management_groups[region][tfstate].enable_amba: True
-# Source: https://github.com/Azure/azure-monitor-baseline-alerts
+# NOTE: AMBA's GitHub repo (azure-monitor-baseline-alerts) provides policy
+# files in ARM/Bicep template format, which is NOT compatible with the
+# terraform-azurerm-caf-enterprise-scale library_path format.
+#
+# The official Terraform-native AMBA integration uses a separate AVM module:
+#   - Azure/avm-ptn-monitoring-amba-alz/azurerm  (resources)
+#   - Azure/avm-ptn-alz/azurerm                  (policy assignments via alz provider)
+# These require azurerm ~> 4.0 and the alz Terraform provider.
+#
+# For deployment with this CAF stack, enable_amba is recorded for reference.
+# To deploy AMBA, use the dedicated AVM Terraform modules in a separate stack
+# after the platform landing zone is provisioned.
+# See: https://aka.ms/amba/alz
 # -----------------------------------------------------------------------
 
-- name: "{{ level }}-{{ tfstate }} | AMBA - Ensure lib subdirectories exist"
-  when: enable_amba | bool
-  shell: |
-    mkdir -p "{{ destination_path }}/lib/policy_definitions"
-    mkdir -p "{{ destination_path }}/lib/policy_set_definitions"
-    mkdir -p "{{ destination_path }}/lib/policy_assignments"
-    mkdir -p "{{ destination_path }}/lib/archetype_definitions"
-    mkdir -p "{{ destination_path }}/lib/role_definitions"
-
-- name: "{{ level }}-{{ tfstate }} | AMBA - Clone Azure Monitor Baseline Alerts (version={{ amba_version }})"
-  shell: |
-    rm -rf "/tmp/amba_{{ tfstate_object.tfstate_key_name }}"
-    git clone --depth 1 --branch "{{ amba_version }}" \
-      "https://github.com/Azure/azure-monitor-baseline-alerts.git" \
-      "/tmp/amba_{{ tfstate_object.tfstate_key_name }}" 2>&1
-  when: enable_amba | bool
-  register: amba_clone
-  ignore_errors: true
-
-- name: "{{ level }}-{{ tfstate }} | AMBA - Warn if clone failed"
+- name: "{{ level }}-{{ tfstate }} | AMBA - Note integration status"
   debug:
-    msg: "WARNING: Failed to clone AMBA repository. AMBA policies will NOT be included. Check network connectivity."
-  when:
-    - enable_amba | bool
-    - amba_clone is failed
-
-- name: "{{ level }}-{{ tfstate }} | AMBA - Merge policy files into lib"
-  shell: |
-    AMBA_SRC="/tmp/amba_{{ tfstate_object.tfstate_key_name }}/patterns/alz/lib"
-    DEST="{{ destination_path }}/lib"
-
-    if [ ! -d "${AMBA_SRC}" ]; then
-      echo "ERROR: AMBA lib path not found at ${AMBA_SRC}"
-      exit 1
-    fi
-
-    for subdir in policy_definitions policy_set_definitions policy_assignments archetype_definitions role_definitions; do
-      if [ -d "${AMBA_SRC}/${subdir}" ]; then
-        mkdir -p "${DEST}/${subdir}"
-        cp -rf "${AMBA_SRC}/${subdir}/." "${DEST}/${subdir}/"
-        echo "Copied AMBA ${subdir}"
-      fi
-    done
-  when:
-    - enable_amba | bool
-    - amba_clone is succeeded
-  register: amba_merge
-  ignore_errors: true
-
-- name: "{{ level }}-{{ tfstate }} | AMBA - Cleanup temp directory"
-  shell: rm -rf "/tmp/amba_{{ tfstate_object.tfstate_key_name }}"
+    msg: >-
+      AMBA (enable_amba={{ enable_amba }}) is noted in configuration.
+      AMBA requires the Azure/avm-ptn-monitoring-amba-alz Terraform module
+      deployed separately after the platform landing zone.
+      See https://aka.ms/amba/alz for Terraform deployment instructions.
   when: enable_amba | bool
-  ignore_errors: true
 
 # -----------------------------------------------------------------------
 # SLZ (Sovereign Landing Zone) integration
-# Enabled when: bootstrap.management_groups[region][tfstate].enable_slz: True
-# Source: https://github.com/Azure/sovereign-landing-zone
+# NOTE: SLZ's GitHub repo (sovereign-landing-zone) provides policy files
+# in ARM/Bicep template format using ${varTargetManagementGroupResourceId}
+# scope placeholders, which are NOT compatible with the
+# terraform-azurerm-caf-enterprise-scale library_path format (which uses
+# ${current_scope_resource_id}).
+#
+# For deployment with this CAF stack, enable_slz is recorded for reference.
+# SLZ policy deployment should be performed using the SLZ Bicep orchestration
+# or by manually converting the SLZ policy JSON files to Terraform lib format
+# and placing them under the library_path with correct archetype references.
+# See: https://github.com/Azure/sovereign-landing-zone
 # -----------------------------------------------------------------------
 
-- name: "{{ level }}-{{ tfstate }} | SLZ - Ensure lib subdirectories exist"
-  when: enable_slz | bool
-  shell: |
-    mkdir -p "{{ destination_path }}/lib/policy_definitions"
-    mkdir -p "{{ destination_path }}/lib/policy_set_definitions"
-    mkdir -p "{{ destination_path }}/lib/policy_assignments"
-    mkdir -p "{{ destination_path }}/lib/archetype_definitions"
-    mkdir -p "{{ destination_path }}/lib/role_definitions"
-
-- name: "{{ level }}-{{ tfstate }} | SLZ - Clone Sovereign Landing Zone (version={{ slz_version }})"
-  shell: |
-    rm -rf "/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
-    git clone --depth 1 --branch "{{ slz_version }}" \
-      "https://github.com/Azure/sovereign-landing-zone.git" \
-      "/tmp/slz_{{ tfstate_object.tfstate_key_name }}" 2>&1
-  when: enable_slz | bool
-  register: slz_clone
-  ignore_errors: true
-
-- name: "{{ level }}-{{ tfstate }} | SLZ - Warn if clone failed"
+- name: "{{ level }}-{{ tfstate }} | SLZ - Note integration status"
   debug:
-    msg: "WARNING: Failed to clone SLZ repository. SLZ policies will NOT be included. Check network connectivity."
-  when:
-    - enable_slz | bool
-    - slz_clone is failed
-
-- name: "{{ level }}-{{ tfstate }} | SLZ - Merge policy files into lib"
-  shell: |
-    SLZ_REPO="/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
-    DEST="{{ destination_path }}/lib"
-
-    # Resolve the correct lib path within the SLZ repository
-    SLZ_SRC=""
-    for candidate in \
-      "${SLZ_REPO}/orchestration/alzLib" \
-      "${SLZ_REPO}/modules/policy/lib" \
-      "${SLZ_REPO}/lib"; do
-      if [ -d "${candidate}" ]; then
-        SLZ_SRC="${candidate}"
-        echo "Found SLZ lib at: ${SLZ_SRC}"
-        break
-      fi
-    done
-
-    if [ -z "${SLZ_SRC}" ]; then
-      echo "ERROR: SLZ lib path not found in cloned repository at ${SLZ_REPO}"
-      exit 1
-    fi
-
-    for subdir in policy_definitions policy_set_definitions policy_assignments archetype_definitions role_definitions; do
-      if [ -d "${SLZ_SRC}/${subdir}" ]; then
-        mkdir -p "${DEST}/${subdir}"
-        cp -rf "${SLZ_SRC}/${subdir}/." "${DEST}/${subdir}/"
-        echo "Copied SLZ ${subdir}"
-      fi
-    done
-  when:
-    - enable_slz | bool
-    - slz_clone is succeeded
-  register: slz_merge
-  ignore_errors: true
-
-- name: "{{ level }}-{{ tfstate }} | SLZ - Cleanup temp directory"
-  shell: rm -rf "/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
+    msg: >-
+      SLZ (enable_slz={{ enable_slz }}) is noted in configuration.
+      SLZ policies use ARM/Bicep format and require manual conversion to
+      Terraform library format or deployment via SLZ Bicep orchestration.
+      See https://github.com/Azure/sovereign-landing-zone for details.
   when: enable_slz | bool
-  ignore_errors: true
