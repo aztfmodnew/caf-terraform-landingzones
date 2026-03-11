@@ -110,12 +110,11 @@
     mkdir -p "{{ destination_path }}/lib/role_definitions"
 
 - name: "{{ level }}-{{ tfstate }} | AMBA - Clone Azure Monitor Baseline Alerts (version={{ amba_version }})"
-  git:
-    repo: "https://github.com/Azure/azure-monitor-baseline-alerts.git"
-    dest: "/tmp/amba_{{ tfstate_object.tfstate_key_name }}"
-    version: "{{ amba_version }}"
-    depth: 1
-    force: true
+  shell: |
+    rm -rf "/tmp/amba_{{ tfstate_object.tfstate_key_name }}"
+    git clone --depth 1 --branch "{{ amba_version }}" \
+      "https://github.com/Azure/azure-monitor-baseline-alerts.git" \
+      "/tmp/amba_{{ tfstate_object.tfstate_key_name }}" 2>&1
   when: enable_amba | bool
   register: amba_clone
   ignore_errors: true
@@ -171,12 +170,11 @@
     mkdir -p "{{ destination_path }}/lib/role_definitions"
 
 - name: "{{ level }}-{{ tfstate }} | SLZ - Clone Sovereign Landing Zone (version={{ slz_version }})"
-  git:
-    repo: "https://github.com/Azure/sovereign-landing-zone.git"
-    dest: "/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
-    version: "{{ slz_version }}"
-    depth: 1
-    force: true
+  shell: |
+    rm -rf "/tmp/slz_{{ tfstate_object.tfstate_key_name }}"
+    git clone --depth 1 --branch "{{ slz_version }}" \
+      "https://github.com/Azure/sovereign-landing-zone.git" \
+      "/tmp/slz_{{ tfstate_object.tfstate_key_name }}" 2>&1
   when: enable_slz | bool
   register: slz_clone
   ignore_errors: true
