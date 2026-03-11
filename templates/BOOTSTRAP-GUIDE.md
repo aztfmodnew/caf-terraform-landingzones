@@ -198,6 +198,36 @@ bootstrap:
 | **deployments.platform.alz** | Azure Landing Zones (management groups, policies) | Optional, advanced |
 | **deployments.platform.scale_out_domains** | L2-L3 scale-out (can have prod/nonprod variants) | connectivity, hubs, virtual networks |
 
+### ALZ Library & Feature Flags (per landing zone)
+
+You can now define ALZ policy composition behavior directly under `bootstrap.management_groups.<region>.<mg_key>.alz_library`:
+
+```yaml
+bootstrap:
+  management_groups:
+    region1:
+      es:
+        version_to_deploy: "v2.1.0"
+        alz_library:
+          source: "embedded"   # embedded | external
+          version: "v2.1.0"
+          enable_amba: false
+          enable_slz: false
+          # amba_version: "main"   # Optional: pin to a specific AMBA git tag (e.g. "2024-03-01")
+          # slz_version: "main"    # Optional: pin to a specific SLZ git tag or branch
+```
+
+#### Current implementation status
+
+- `source: embedded` ✅ supported (default)
+- `source: external` ⚠️ reserved for next phase (currently fails fast with a clear message)
+- `enable_amba` ✅ implemented — clones `Azure/azure-monitor-baseline-alerts` from GitHub and merges `patterns/alz/lib/` into the ALZ lib folder
+- `enable_slz` ✅ implemented — clones `Azure/sovereign-landing-zone` from GitHub and merges sovereignty policy files into the ALZ lib folder
+- `amba_version` ✅ optional — defaults to `"main"`, can be set to any git tag or branch
+- `slz_version` ✅ optional — defaults to `"main"`, can be set to any git tag or branch
+
+This lets you standardize a common model across all landing zones while enabling progressive rollout by environment or business domain.
+
 ---
 
 ## 🔄 Ansible Playbook Flow
