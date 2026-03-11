@@ -85,50 +85,177 @@
 
 # -----------------------------------------------------------------------
 # AMBA (Azure Monitor Baseline Alerts) integration
-# NOTE: AMBA's GitHub repo (azure-monitor-baseline-alerts) provides policy
-# files in ARM/Bicep template format, which is NOT compatible with the
-# terraform-azurerm-caf-enterprise-scale library_path format.
+# Enabled when: topology.management_groups[region][service].enable_amba: True
+# Source: https://github.com/Azure/azure-monitor-baseline-alerts
 #
-# The official Terraform-native AMBA integration uses a separate AVM module:
-#   - Azure/avm-ptn-monitoring-amba-alz/azurerm  (resources)
-#   - Azure/avm-ptn-alz/azurerm                  (policy assignments via alz provider)
-# These require azurerm ~> 4.0 and the alz Terraform provider.
-#
-# For deployment with this CAF stack, enable_amba is recorded for reference.
-# To deploy AMBA, use the dedicated AVM Terraform modules in a separate stack
-# after the platform landing zone is provisioned.
-# See: https://aka.ms/amba/alz
+# NOTE: AMBA provides policies in ARM/Bicep format (patterns/alz/lib/ does not
+# exist). If a future AMBA release adds a Terraform-compatible lib folder,
+# the copy tasks below will automatically pick it up.
+# For Terraform-native deployment use the AVM modules: https://aka.ms/amba/alz
 # -----------------------------------------------------------------------
 
-- name: "{{ destination_alz_path }} | AMBA - Note integration status"
-  debug:
-    msg: >-
-      AMBA (enable_amba={{ enable_amba }}) is noted in configuration.
-      AMBA requires the Azure/avm-ptn-monitoring-amba-alz Terraform module
-      deployed separately after the platform landing zone.
-      See https://aka.ms/amba/alz for Terraform deployment instructions.
+- name: "{{ destination_alz_path }} | AMBA"
   when: enable_amba | bool
+  block:
+    - name: "{{ destination_alz_path }} | AMBA - Ensure lib subdirectories exist"
+      ansible.builtin.file:
+        path: "{{ destination_alz_path }}/lib/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - policy_definitions
+        - policy_set_definitions
+        - policy_assignments
+        - archetype_definitions
+        - role_definitions
+
+    - name: "{{ destination_alz_path }} | AMBA - Clone azure-monitor-baseline-alerts (version={{ amba_version }})"
+      ansible.builtin.git:
+        repo: "https://github.com/Azure/azure-monitor-baseline-alerts.git"
+        dest: "/tmp/amba_{{ service }}"
+        version: "{{ amba_version }}"
+        depth: 1
+        force: true
+
+    - name: "{{ destination_alz_path }} | AMBA - Check Terraform lib path"
+      ansible.builtin.stat:
+        path: "/tmp/amba_{{ service }}/patterns/alz/lib"
+      register: amba_lib_stat
+
+    - name: "{{ destination_alz_path }} | AMBA - Warn: no Terraform-compatible lib found"
+      ansible.builtin.debug:
+        msg: >-
+          AMBA does not yet provide a Terraform-compatible library at patterns/alz/lib.
+          Policies are in ARM/Bicep format only and will NOT be merged into library_path.
+          To deploy AMBA via Terraform use: https://aka.ms/amba/alz
+      when: not amba_lib_stat.stat.exists
+
+    - name: "{{ destination_alz_path }} | AMBA - Find policy files per subdirectory"
+      ansible.builtin.find:
+        paths: "/tmp/amba_{{ service }}/patterns/alz/lib/{{ item }}"
+        patterns: "*.json"
+        recurse: false
+      loop:
+        - policy_definitions
+        - policy_set_definitions
+        - policy_assignments
+        - archetype_definitions
+        - role_definitions
+      register: amba_found_files
+      when: amba_lib_stat.stat.exists
+
+    - name: "{{ destination_alz_path }} | AMBA - Copy policy files into lib"
+      ansible.builtin.copy:
+        src: "{{ item.1.path }}"
+        dest: "{{ destination_alz_path }}/lib/{{ item.0.item }}/{{ item.1.path | basename }}"
+        remote_src: true
+        mode: preserve
+      loop: "{{ amba_found_files.results | subelements('files') }}"
+      loop_control:
+        label: "{{ item.1.path | basename }}"
+      when: amba_lib_stat.stat.exists
+
+  rescue:
+    - name: "{{ destination_alz_path }} | AMBA - Clone failed"
+      ansible.builtin.debug:
+        msg: "WARNING: Failed to clone AMBA repository. AMBA policies will NOT be included. Check network connectivity."
+
+  always:
+    - name: "{{ destination_alz_path }} | AMBA - Cleanup temp directory"
+      ansible.builtin.file:
+        path: "/tmp/amba_{{ service }}"
+        state: absent
 
 # -----------------------------------------------------------------------
 # SLZ (Sovereign Landing Zone) integration
-# NOTE: SLZ's GitHub repo (sovereign-landing-zone) provides policy files
-# in ARM/Bicep template format using ${varTargetManagementGroupResourceId}
-# scope placeholders, which are NOT compatible with the
-# terraform-azurerm-caf-enterprise-scale library_path format (which uses
-# ${current_scope_resource_id}).
+# Enabled when: topology.management_groups[region][service].enable_slz: True
+# Source: https://github.com/Azure/sovereign-landing-zone
 #
-# For deployment with this CAF stack, enable_slz is recorded for reference.
-# SLZ policy deployment should be performed using the SLZ Bicep orchestration
-# or by manually converting the SLZ policy JSON files to Terraform lib format
-# and placing them under the library_path with correct archetype references.
-# See: https://github.com/Azure/sovereign-landing-zone
+# NOTE: SLZ provides policies in ARM/Bicep format using
+# ${varTargetManagementGroupResourceId} scope placeholders, which differ from
+# the ${current_scope_resource_id} format required by library_path.
+# Multiple candidate paths are checked in case a future release adds a
+# Terraform-compatible lib folder.
 # -----------------------------------------------------------------------
 
-- name: "{{ destination_alz_path }} | SLZ - Note integration status"
-  debug:
-    msg: >-
-      SLZ (enable_slz={{ enable_slz }}) is noted in configuration.
-      SLZ policies use ARM/Bicep format and require manual conversion to
-      Terraform library format or deployment via SLZ Bicep orchestration.
-      See https://github.com/Azure/sovereign-landing-zone for details.
+- name: "{{ destination_alz_path }} | SLZ"
   when: enable_slz | bool
+  block:
+    - name: "{{ destination_alz_path }} | SLZ - Ensure lib subdirectories exist"
+      ansible.builtin.file:
+        path: "{{ destination_alz_path }}/lib/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - policy_definitions
+        - policy_set_definitions
+        - policy_assignments
+        - archetype_definitions
+        - role_definitions
+
+    - name: "{{ destination_alz_path }} | SLZ - Clone sovereign-landing-zone (version={{ slz_version }})"
+      ansible.builtin.git:
+        repo: "https://github.com/Azure/sovereign-landing-zone.git"
+        dest: "/tmp/slz_{{ service }}"
+        version: "{{ slz_version }}"
+        depth: 1
+        force: true
+
+    - name: "{{ destination_alz_path }} | SLZ - Check candidate lib paths"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "/tmp/slz_{{ service }}/orchestration/alzLib"
+        - "/tmp/slz_{{ service }}/modules/policy/lib"
+        - "/tmp/slz_{{ service }}/lib"
+      register: slz_path_candidates
+
+    - name: "{{ destination_alz_path }} | SLZ - Set lib path from first existing candidate"
+      ansible.builtin.set_fact:
+        slz_lib_path: "{{ (slz_path_candidates.results | selectattr('stat.exists') | first).item | default('') }}"
+
+    - name: "{{ destination_alz_path }} | SLZ - Warn: no Terraform-compatible lib found"
+      ansible.builtin.debug:
+        msg: >-
+          SLZ does not provide a Terraform-compatible library path.
+          Policies use ARM/Bicep format with ${varTargetManagementGroupResourceId}
+          scope placeholders, incompatible with ${current_scope_resource_id}.
+          Policy files will NOT be merged into library_path.
+          See: https://github.com/Azure/sovereign-landing-zone
+      when: slz_lib_path == ''
+
+    - name: "{{ destination_alz_path }} | SLZ - Find policy files per subdirectory"
+      ansible.builtin.find:
+        paths: "{{ slz_lib_path }}/{{ item }}"
+        patterns: "*.json"
+        recurse: false
+      loop:
+        - policy_definitions
+        - policy_set_definitions
+        - policy_assignments
+        - archetype_definitions
+        - role_definitions
+      register: slz_found_files
+      when: slz_lib_path != ''
+
+    - name: "{{ destination_alz_path }} | SLZ - Copy policy files into lib"
+      ansible.builtin.copy:
+        src: "{{ item.1.path }}"
+        dest: "{{ destination_alz_path }}/lib/{{ item.0.item }}/{{ item.1.path | basename }}"
+        remote_src: true
+        mode: preserve
+      loop: "{{ slz_found_files.results | subelements('files') }}"
+      loop_control:
+        label: "{{ item.1.path | basename }}"
+      when: slz_lib_path != ''
+
+  rescue:
+    - name: "{{ destination_alz_path }} | SLZ - Clone failed"
+      ansible.builtin.debug:
+        msg: "WARNING: Failed to clone SLZ repository. SLZ policies will NOT be included. Check network connectivity."
+
+  always:
+    - name: "{{ destination_alz_path }} | SLZ - Cleanup temp directory"
+      ansible.builtin.file:
+        path: "/tmp/slz_{{ service }}"
+        state: absent
