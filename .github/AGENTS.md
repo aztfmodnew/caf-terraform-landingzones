@@ -154,6 +154,32 @@ Use westeurope and eastus regions"
 
 ## 🏗️ Scenario & Configuration Agents
 
+### **ALZ Policy Composer** (NEW!)
+**Purpose:** Designs and validates governance composition for ALZ, AMBA, and optional SLZ overlays across multiple landing zones.
+
+**When to use:**
+- "Enable AMBA incrementally for selected landing zones"
+- "Standardize ALZ policy versions across 10 landing zones"
+- "Plan ALZ embedded → external library migration"
+- "Review archetype overrides and policy assignment conflicts"
+
+**What it does:**
+- Reviews `ignite.yaml` and management group policy settings per landing zone
+- Validates ALZ feature flags (`alz_library.source`, `enable_amba`, `enable_slz`)
+- Suggests phased rollout strategy (pilot → wave rollout)
+- Detects policy overlap/risk areas before apply
+- Produces migration checklist for version upgrades
+
+**Example invocation:**
+```
+"Compose governance for 10 landing zones with ALZ v2.1.0 baseline and AMBA enabled only for prod workloads"
+```
+
+**Related files:**
+- [Rover Ignite Bootstrap Guide](../../templates/BOOTSTRAP-GUIDE.md)
+- [ALZ service template](../../templates/platform/services/alz.yaml)
+- [ALZ deployment loader](../../templates/ansible/load_deployments_alz.yaml)
+
 ### **Documentation Sync**
 **Purpose:** Maintains comprehensive, accurate module and scenario documentation with automated README generation and CHANGELOG tracking.
 

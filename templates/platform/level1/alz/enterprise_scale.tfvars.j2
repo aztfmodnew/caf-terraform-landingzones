@@ -1,5 +1,7 @@
 # relative path to {{ landingzones_folder }}/caf_solution/add-ons/caf_alz
 library_path                    = "{{ destination_base_path }}/{{tfstate_object.level}}/{{stage}}/{{tfstate}}/lib"
+architecture_name               = "{{ bootstrap.management_groups[region][tfstate].management_group_prefix }}"
+alz_library_ref                 = "{{ tfstate_object.alz_library_ref | default('2025.02.0') }}"
 {% if bootstrap.management_groups[region][tfstate].root_parent_id is defined %}
 root_parent_id                  = "{{ bootstrap.management_groups[region][tfstate].root_parent_id }}"
 {% endif %}

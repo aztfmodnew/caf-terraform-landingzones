@@ -3,10 +3,18 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.108"
+      version = "~> 4.0"
+    }
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.2"
+    }
+    alz = {
+      source  = "azure/alz"
+      version = "~> 0.16"
     }
   }
-  required_version = ">= 1.3.5"
+  required_version = ">= 1.9.0"
 }
 
 provider "azurerm" {
@@ -15,28 +23,19 @@ provider "azurerm" {
   features {}
 }
 
-provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
-  alias      = "connectivity"
-  features {}
-  subscription_id = local.subscription_id_connectivity
-  tenant_id       = var.tenant_id
-}
+provider "azapi" {}
 
-provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
-  alias      = "management"
-  features {}
-  subscription_id = var.subscription_id_management == null ? data.azurerm_client_config.current.subscription_id : var.subscription_id_management
-  tenant_id       = var.tenant_id
-}
-
-provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
-  alias      = "identity"
-  features {}
-  subscription_id = var.subscription_id_identity == null ? data.azurerm_client_config.current.subscription_id : var.subscription_id_identity
-  tenant_id       = var.tenant_id
+provider "alz" {
+  library_references = concat(
+    [
+      {
+        path = "platform/alz"
+        ref  = var.alz_library_ref
+      }
+    ],
+    var.library_path != null ? [{ custom_url = var.library_path }] : []
+  )
 }
 
 data "azurerm_client_config" "current" {}
+data "azapi_client_config" "current" {}

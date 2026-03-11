@@ -138,3 +138,37 @@ locals {
   }
 
 }
+
+# --- AVM wrapper: translate enterprise_scale custom_landing_zones + subscription_id_overrides → AVM subscription_placement ---
+locals {
+
+  # Flatten subscriptions from custom_landing_zones into AVM's subscription_placement map.
+  # Key is <mg_id>_<index> to ensure uniqueness while remaining deterministic.
+  _clz_subscription_placement = merge([
+    for mg_id, mg_config in local.custom_landing_zones : {
+      for i, sub_id in try(mg_config.subscription_ids, []) :
+      "${mg_id}_${i}" => {
+        subscription_id       = sub_id
+        management_group_name = mg_id
+      }
+    }
+  ]...)
+
+  # Flatten subscription_id_overrides (archetype_name → [sub_ids]) into the same map.
+  # The archetype key corresponds to a standard ALZ MG name prefixed with root_id.
+  _override_subscription_placement = merge([
+    for archetype, sub_ids in local.subscription_id_overrides : {
+      for i, sub_id in sub_ids :
+      "${archetype}_${i}" => {
+        subscription_id       = sub_id
+        management_group_name = "${var.root_id}-${archetype}"
+      }
+    }
+  ]...)
+
+  subscription_placement_map = merge(
+    local._clz_subscription_placement,
+    local._override_subscription_placement
+  )
+
+}
