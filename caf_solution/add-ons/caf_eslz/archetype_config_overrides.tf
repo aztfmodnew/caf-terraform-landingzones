@@ -147,21 +147,3 @@ locals {
 #   # connectivity = {}
 #   # management = {}
 # }
-# --- AVM wrapper: translate enterprise_scale archetype_config_overrides → AVM policy_assignments_to_modify ---
-locals {
-
-  # Translate resolved archetype parameters to AVM's policy_assignments_to_modify format.
-  # Each parameter value is JSON-encoded as { "value": <resolved_value> } per AVM spec.
-  policy_assignments_to_modify_map = {
-    for mg_id, mg_config in local.archetype_config_overrides : mg_id => {
-      policy_assignments = {
-        for policy_name, params in try(mg_config.parameters, {}) : policy_name => {
-          parameters = {
-            for param_name, param_val in params : param_name => jsonencode({ value = param_val })
-          }
-        }
-      }
-    }
-  }
-
-}

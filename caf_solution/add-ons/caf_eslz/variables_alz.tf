@@ -610,22 +610,3 @@ variable "subscription_id_identity" {
   description = "If specified, identifies the Platform subscription for \"Identity\" for resource deployment and correct placement in the Management Group hierarchy."
   default     = null
 }
-
-# --- AVM wrapper variables ---
-
-variable "architecture_name" {
-  type        = string
-  description = <<DESCRIPTION
-Name of the ALZ architecture to deploy. Must match a *.alz_architecture_definition.[json|yaml|yml] file
-found in the alz provider library_references (either the standard ALZ lib or the custom library_path).
-When using the generated architecture definition from Ansible, set this to the value of root_id.
-Defaults to "alz" which uses the standard Azure Landing Zones architecture.
-DESCRIPTION
-  default     = "alz"
-}
-
-variable "alz_library_ref" {
-  type        = string
-  description = "Git tag/ref of the Azure/alz-lib platform/alz library to pin. See https://github.com/Azure/alz-lib/releases."
-  default     = "2025.02.0"
-}

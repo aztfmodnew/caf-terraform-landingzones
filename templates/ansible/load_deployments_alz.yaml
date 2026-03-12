@@ -79,32 +79,6 @@
     - item.path is search(".yaml")
     - topology.management_groups[region][service].update_lib_folder | default(True)
 
-- name: "  Lib - AVM archetype definitions - built-in"
-  ansible.builtin.template:
-    src: "{{ template_lib_folder }}/archetype_definitions/archetype_definition_avm_template.yaml.j2"
-    dest: "{{ destination_alz_path }}/lib/archetype_definitions/{{ mg.archetype_definitions[item].archetype_id }}.alz_archetype_definition.yaml"
-    force: yes
-  loop: "{{ mg.archetype_definitions.keys() }}"
-  loop_control:
-    loop_var: item
-
-- name: "  Lib - AVM archetype definitions - custom"
-  when:
-    - mg_custom.archetype_definitions is defined
-  ansible.builtin.template:
-    src: "{{ template_lib_folder }}/archetype_definitions/custom_landing_zone_avm_template.yaml.j2"
-    dest: "{{ destination_alz_path }}/lib/archetype_definitions/{{ mg_custom.archetype_definitions[item].archetype_id }}.alz_archetype_definition.yaml"
-    force: yes
-  loop: "{{ mg_custom.archetype_definitions.keys() }}"
-  loop_control:
-    loop_var: item
-
-- name: "  Lib - AVM architecture definition"
-  ansible.builtin.template:
-    src: "{{ template_lib_folder }}/architecture_definition.yaml.j2"
-    dest: "{{ destination_alz_path }}/lib/{{ topology.management_groups[region][service].management_group_prefix }}.alz_architecture_definition.yaml"
-    force: yes
-
 - name: "{{deployment_mode}}/{{stage}}/{{region}}/{{service}} to {{destination_path}}/{{'alz_' + service}}.yaml"
   ansible.builtin.template:
     src: "{{platform_service_folder}}/{{topology.deployments[deployment_mode][stage][region][item]}}"

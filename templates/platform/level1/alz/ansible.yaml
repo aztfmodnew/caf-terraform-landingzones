@@ -59,15 +59,6 @@
   loop_control:
     loop_var: item
 
-- name: "{{ level }}-{{ tfstate }} |  Lib - AVM archetype definitions - built-in"
-  ansible.builtin.template:
-      src: "{{ template_source_folder }}/lib/{{tfstate_object.alz_version}}/archetype_definitions/archetype_definition_avm_template.yaml.j2"
-      dest: "{{ destination_path }}/lib/archetype_definitions/{{ mg.archetype_definitions[item].archetype_id }}.alz_archetype_definition.yaml"
-      force: yes
-  loop: "{{ mg.archetype_definitions.keys() }}"
-  loop_control:
-    loop_var: item
-
 - name: "{{ level }}-{{ tfstate }} |  Lib - archetypes - custom"
   when:
     - mg_custom.archetype_definitions is defined
@@ -78,23 +69,6 @@
   loop: "{{ mg_custom.archetype_definitions.keys() }}"
   loop_control:
     loop_var: item
-
-- name: "{{ level }}-{{ tfstate }} |  Lib - AVM archetype definitions - custom"
-  when:
-    - mg_custom.archetype_definitions is defined
-  ansible.builtin.template:
-      src: "{{ template_source_folder }}/lib/{{tfstate_object.alz_version}}/archetype_definitions/custom_landing_zone_avm_template.yaml.j2"
-      dest: "{{ destination_path }}/lib/archetype_definitions/{{ mg_custom.archetype_definitions[item].archetype_id }}.alz_archetype_definition.yaml"
-      force: yes
-  loop: "{{ mg_custom.archetype_definitions.keys() }}"
-  loop_control:
-    loop_var: item
-
-- name: "{{ level }}-{{ tfstate }} |  Lib - AVM architecture definition"
-  ansible.builtin.template:
-    src: "{{ template_source_folder }}/lib/{{tfstate_object.alz_version}}/architecture_definition.yaml.j2"
-    dest: "{{ destination_path }}/lib/{{ bootstrap.management_groups[region][tfstate].management_group_prefix }}.alz_architecture_definition.yaml"
-    force: yes
 
 - name: "{{ level }}-{{ tfstate }} | archetypes"
   ansible.builtin.template:
