@@ -105,12 +105,12 @@
       loop_control:
         loop_var: region
       when:
+        - deployment_mode == 'platform'
         - launchpad_tfstate_exists.rc == 0
         - bootstrap.deployments[deployment_mode].alz is defined
       vars:
         lz_type: "{{deployment_mode}}"
         stage: alz
-      when: deployment_mode == 'platform'
 
 #
 # Process the deployments folders
