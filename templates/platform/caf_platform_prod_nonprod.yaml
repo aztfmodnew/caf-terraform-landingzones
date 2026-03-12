@@ -103,6 +103,9 @@ azuread_user_ea_account_owner: {{azuread_user_ea_account_owner | default(upn)}}
 ea_owner_object_id: {{ea_owner_object_id | default(object_id)}}
 
 azuread_identity_mode: service_principal
+# PR1 transition (contract-only): declare bootstrap auth mode for future runtime switch.
+# Runtime remains unchanged in this phase (legacy secret path).
+auth_mode: {{ bootstrap.auth_mode | default(bootstrap.bootstrap.auth_mode | default('legacy_secret')) | lower }}
 enable_azuread_groups: True
 enable_azuread_applications: True
 
@@ -247,6 +250,8 @@ azure_landing_zones:
     tenant_name: {{ azure_landing_zones.identity.tenant_name | default(tenant_name)}}
     # only service_principal supported with rover ignite at the moment
     azuread_identity_mode: {{bootstrap.azuread_identity_mode}}
+    # PR1 transition (contract-only): runtime behavior remains legacy_secret.
+    auth_mode: {{ bootstrap.auth_mode | default(bootstrap.bootstrap.auth_mode | default('legacy_secret')) | lower }}
     enable_azuread_groups: {{bootstrap.enable_azuread_groups}}
     enable_azuread_applications: {{bootstrap.enable_azuread_applications}}
     # UPNs you want to add in the caf_platform_maintainers Azure AD group

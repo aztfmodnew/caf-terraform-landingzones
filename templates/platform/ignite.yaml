@@ -1,5 +1,7 @@
 bootstrap:
   azuread_identity_mode: service_principal
+  # Bootstrap authentication contract selector (PR1 contract-only)
+  auth_mode: legacy_secret
   enable_azuread_groups: True
   enable_azuread_applications: True
 

@@ -194,9 +194,20 @@ bootstrap:
 |---------|---------|---------|
 | **bootstrap.caf_environment** | Environment identifier | `prod`, `dev`, `test` |
 | **azure_landing_zones.identity.tenant_name** | Azure AD tenant | `contoso.onmicrosoft.com` |
+| **bootstrap.auth_mode** | Authentication contract selector (PR1) | `legacy_secret`, `oidc`, `hybrid` |
 | **deployments.platform.root** | L0-L1 bootstrap (must complete first) | launchpad, identity, management |
 | **deployments.platform.alz** | Azure Landing Zones (management groups, policies) | Optional, advanced |
 | **deployments.platform.scale_out_domains** | L2-L3 scale-out (can have prod/nonprod variants) | connectivity, hubs, virtual networks |
+
+### Bootstrap Authentication Contract (`bootstrap.auth_mode`)
+
+`bootstrap.auth_mode` defines the authentication contract for bootstrap transition planning:
+
+- `legacy_secret` → current/effective runtime path (service principal + secret).
+- `oidc` → reserved for future runtime support.
+- `hybrid` → reserved mixed mode for transition scenarios.
+
+> Runtime note: default behavior remains `legacy_secret`. The reusable Rover workflow now supports `auth_mode` (`legacy_secret|oidc|hybrid`) and, for `oidc`, skips SP impersonation via Key Vault. Resolution order is: explicit workflow input `auth_mode` → repository variable `CAF_AUTH_MODE` → `legacy_secret`.
 
 ### ALZ Library & Feature Flags (per landing zone)
 

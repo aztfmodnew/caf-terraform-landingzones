@@ -72,6 +72,10 @@ on:
         description: Tag's name of the Keyvault wit the credential to use.
         required: false
         type: string
+      auth_mode:
+        description: Authentication runtime mode (legacy_secret, oidc, hybrid). If not provided, uses repository variable CAF_AUTH_MODE, then falls back to legacy_secret.
+        required: false
+        type: string
       plan_path:
         description: Full path of the of terraform plan
         required: false
@@ -124,14 +128,38 @@ jobs:
         if: inputs.terraform_action == 'plan_apply'
         shell: bash
         run: |
-          echo "Retreiving keyvault for credentials"
-          # Get the keyvault with the credentials
-          cred_vault_name=$(az keyvault list --query "[?(tags.caf_identity_aad_key=='${{inputs.caf_identity_aad_key}}' && tags.caf_environment=='${{inputs.environment}}')].{name:name}[0]" -o tsv)
-          if [ -z "${cred_vault_name}" ]; then
-            echo "Cannot retreive the credentials. Make sure the RBAC are set properly."
-            echo "Bootstraping the environment."
+          auth_mode_input=$(echo "${{ inputs.auth_mode }}" | tr '[:upper:]' '[:lower:]' | xargs)
+          auth_mode_var=$(echo "${{ vars.CAF_AUTH_MODE }}" | tr '[:upper:]' '[:lower:]' | xargs)
+
+          auth_mode="${auth_mode_input}"
+          if [ -z "${auth_mode}" ]; then
+            auth_mode="${auth_mode_var}"
+          fi
+          if [ -z "${auth_mode}" ]; then
+            auth_mode="legacy_secret"
+          fi
+
+          if [ "${auth_mode}" != "legacy_secret" ] && [ "${auth_mode}" != "oidc" ] && [ "${auth_mode}" != "hybrid" ]; then
+            echo "Invalid auth_mode '${auth_mode}'. Allowed values: legacy_secret, oidc, hybrid."
+            exit 1
+          fi
+
+          if [ "${auth_mode}" = "oidc" ]; then
+            echo "auth_mode=oidc -> skipping SP impersonation from Key Vault."
           else
-            impresonate=("--impersonate-sp-from-keyvault-url https://${cred_vault_name}.vault.azure.net/ ")
+            echo "Retrieving keyvault for credentials (auth_mode=${auth_mode})"
+            # Get the keyvault with the credentials
+            cred_vault_name=$(az keyvault list --query "[?(tags.caf_identity_aad_key=='${{inputs.caf_identity_aad_key}}' && tags.caf_environment=='${{inputs.environment}}')].{name:name}[0]" -o tsv)
+            if [ -z "${cred_vault_name}" ]; then
+              echo "Cannot retrieve credentials from Key Vault."
+              if [ "${auth_mode}" = "legacy_secret" ]; then
+                echo "Continuing without impersonation. Ensure RBAC and bootstrap prerequisites are in place."
+              else
+                echo "auth_mode=hybrid -> continuing without impersonation and relying on current session/OIDC."
+              fi
+            else
+              impresonate=("--impersonate-sp-from-keyvault-url https://${cred_vault_name}.vault.azure.net/ ")
+            fi
           fi
 
           set +e
