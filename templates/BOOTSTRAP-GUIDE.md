@@ -194,20 +194,24 @@ bootstrap:
 |---------|---------|---------|
 | **bootstrap.caf_environment** | Environment identifier | `prod`, `dev`, `test` |
 | **azure_landing_zones.identity.tenant_name** | Azure AD tenant | `contoso.onmicrosoft.com` |
-| **bootstrap.auth_mode** | Authentication contract selector (PR1) | `legacy_secret`, `oidc`, `hybrid` |
+| **bootstrap.auth_mode** | Authentication mode for generated CI/CD workflows | `legacy_secret`, `oidc`, `hybrid` |
 | **deployments.platform.root** | L0-L1 bootstrap (must complete first) | launchpad, identity, management |
 | **deployments.platform.alz** | Azure Landing Zones (management groups, policies) | Optional, advanced |
 | **deployments.platform.scale_out_domains** | L2-L3 scale-out (can have prod/nonprod variants) | connectivity, hubs, virtual networks |
 
-### Bootstrap Authentication Contract (`bootstrap.auth_mode`)
+### Bootstrap Authentication Mode (`bootstrap.auth_mode`)
 
-`bootstrap.auth_mode` defines the authentication contract for bootstrap transition planning:
+`bootstrap.auth_mode` controls how the generated GitHub workflows authenticate to Azure:
 
-- `legacy_secret` → current/effective runtime path (service principal + secret).
-- `oidc` → reserved for future runtime support.
-- `hybrid` → reserved mixed mode for transition scenarios.
+- `legacy_secret` → log in with `azure/login`, then impersonate the service principal stored in Key Vault.
+- `oidc` → log in with GitHub OIDC and skip service principal secret impersonation.
+- `hybrid` → log in with GitHub OIDC, but still use Key Vault impersonation when bootstrap credentials are present.
 
-> Runtime note: default behavior remains `legacy_secret`. The reusable Rover workflow now supports `auth_mode` (`legacy_secret|oidc|hybrid`) and, for `oidc`, skips SP impersonation via Key Vault. Resolution order is: explicit workflow input `auth_mode` → repository variable `CAF_AUTH_MODE` → `legacy_secret`.
+GitHub workflow behavior:
+
+- `azure/login@v2` is used with `permissions.id-token: write`.
+- Resolution order is: explicit workflow input `auth_mode` → repository variable `CAF_AUTH_MODE` → `legacy_secret`.
+- The reusable workflows accept either `AZURE_MANAGEMENT_SUBSCRIPTION_ID` (bootstrap-created secret) or `AZURE_LAUNCHPAD_SUBSCRIPTION_ID` for the launchpad subscription context.
 
 ### ALZ Library & Feature Flags (per landing zone)
 

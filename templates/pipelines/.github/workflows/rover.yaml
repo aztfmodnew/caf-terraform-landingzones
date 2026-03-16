@@ -86,7 +86,9 @@ on:
       AZURE_TENANT_ID:
         required: true
       AZURE_LAUNCHPAD_SUBSCRIPTION_ID:
-        required: true
+        required: false
+      AZURE_MANAGEMENT_SUBSCRIPTION_ID:
+        required: false
       AZURE_TARGET_SUBSCRIPTION_ID:
         required: true
 
@@ -102,15 +104,34 @@ jobs:
   rover:
     name: ${{ inputs.level }}
     runs-on: [self-hosted, platform]
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
       
+      - name: Resolve launchpad subscription secret
+        id: subscription
+        shell: bash
+        run: |
+          subscription_id="${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}"
+          if [ -z "${subscription_id}" ]; then
+            subscription_id="${{ secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID }}"
+          fi
+
+          if [ -z "${subscription_id}" ]; then
+            echo "One of AZURE_MANAGEMENT_SUBSCRIPTION_ID or AZURE_LAUNCHPAD_SUBSCRIPTION_ID must be configured."
+            exit 1
+          fi
+
+          echo "subscription_id=${subscription_id}" >> "${GITHUB_OUTPUT}"
+
       - name: 'Azure Login'
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+          subscription-id: ${{ steps.subscription.outputs.subscription_id }}
 
       - name: Checkout Configuration
         uses: actions/checkout@v3
@@ -130,6 +151,7 @@ jobs:
         run: |
           auth_mode_input=$(echo "${{ inputs.auth_mode }}" | tr '[:upper:]' '[:lower:]' | xargs)
           auth_mode_var=$(echo "${{ vars.CAF_AUTH_MODE }}" | tr '[:upper:]' '[:lower:]' | xargs)
+          tfstate_subscription_id="${{ steps.subscription.outputs.subscription_id }}"
 
           auth_mode="${auth_mode_input}"
           if [ -z "${auth_mode}" ]; then
@@ -146,6 +168,7 @@ jobs:
 
           if [ "${auth_mode}" = "oidc" ]; then
             echo "auth_mode=oidc -> skipping SP impersonation from Key Vault."
+            echo "ARM_USE_OIDC=true" >> "${GITHUB_ENV}"
           else
             echo "Retrieving keyvault for credentials (auth_mode=${auth_mode})"
             # Get the keyvault with the credentials
@@ -156,6 +179,7 @@ jobs:
                 echo "Continuing without impersonation. Ensure RBAC and bootstrap prerequisites are in place."
               else
                 echo "auth_mode=hybrid -> continuing without impersonation and relying on current session/OIDC."
+                echo "ARM_USE_OIDC=true" >> "${GITHUB_ENV}"
               fi
             else
               impresonate=("--impersonate-sp-from-keyvault-url https://${cred_vault_name}.vault.azure.net/ ")
@@ -169,7 +193,7 @@ jobs:
           action_apply=("-a apply ${{inputs.terraform_action_apply }} ")
           landingzone_code_path=("-lz $(readlink -f ${{inputs.landingzone_code_path}}) ")
           landingzone_configuration_path=("-var-folder $(readlink -f ${{inputs.landingzone_configuration_path}}) ")
-          tfstate_subscription_id=("-tfstate_subscription_id ${{secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID}} ")
+          tfstate_subscription_id_arg=("-tfstate_subscription_id ${tfstate_subscription_id} ")
           target_subscription=("-target_subscription ${{secrets.AZURE_TARGET_SUBSCRIPTION_ID}} ")
           tfstate=("-tfstate ${{inputs.tfstate}} ")
           environment=("-env ${{inputs.environment}} ")
@@ -184,8 +208,8 @@ jobs:
             plan_path=("-p ${{inputs.plan_path}} ")
           fi
 
-          command_plan="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}${plan_path[@]}${output[@]}${action_plan[@]}${{inputs.terraform_action_plan}}"
-          command_apply="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}"
+          command_plan="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id_arg[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}${plan_path[@]}${output[@]}${action_plan[@]}${{inputs.terraform_action_plan}}"
+          command_apply="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id_arg[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}"
           
           echo "::set-output name=rover-command-plan::$(echo ${command_plan})"
           echo "::set-output name=rover-command-apply::$(echo ${command_apply})"

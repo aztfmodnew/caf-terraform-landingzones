@@ -3,7 +3,42 @@
 The purpose of the CAF Level 0 (L0) bootstrap Azure AD application is to own the creation of the launchpads. During that process a new Azure AD application is created with less permissions on the directory and also more specific Azure permissions to fulfill the Azure operations of the
 level0 (subscription creation for example)
 
-This document explains the manual process to create the L0 Azure AD app and the following information must be captured:
+This document explains the process to create the L0 Azure AD app. Two authentication modes are supported:
+
+## Authentication modes
+
+### OIDC / Workload Identity Federation (recommended)
+
+With OIDC, no client secret is stored. GitHub Actions exchanges a short-lived OIDC token for an Azure access token using a **federated credential** configured on the Azure AD application.
+
+Azure application details to capture:
+
+| Variable             | Item                     | Value |
+| -------------------- | ------------------------ | ----  |
+|ARM\_CLIENT\_ID       | Application (client) ID  |       |
+|ARM\_TENANT\_ID       | Directory (tenant) ID    |       |
+|ARM\_SUBSCRIPTION\_ID | Subscription ID          |       |
+
+`ARM_CLIENT_SECRET` is **not required** for OIDC.
+
+For the reusable GitHub workflows, store these values as repository secrets:
+
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_MANAGEMENT_SUBSCRIPTION_ID` for the launchpad/bootstrap subscription
+- `AZURE_TARGET_SUBSCRIPTION_ID` for the deployment target subscription
+- In multi-subscription platforms, also store `AZURE_CONNECTIVITY_SUBSCRIPTION_ID`, `AZURE_IDENTITY_SUBSCRIPTION_ID`, and `AZURE_SECURITY_SUBSCRIPTION_ID`
+
+Set the repository **variable** `CAF_AUTH_MODE=oidc`.
+
+After creating the app and granting API permissions (see below), add federated credentials:
+- Go to **Certificates & secrets → Federated credentials → Add credential**
+- Entity type: `Branch`, branches: `bootstrap`, `end2end`, `main`, and any deployment branches you use
+- See [getting-started/github.md](../../caf-terraform-landingzones-platform-starter/getting-started/github.md) for the full OIDC setup guide
+
+### Legacy secret (traditional approach)
+
+Credentials to capture:
 
 | Variable             | Item                     | Value |
 | -------------------- | ------------------------ | ----  |
@@ -11,6 +46,8 @@ This document explains the manual process to create the L0 Azure AD app and the 
 |ARM\_CLIENT\_SECRET   | Client secret            |       |
 |ARM\_TENANT\_ID       | Directory (tenant) ID    |       |
 |ARM\_SUBSCRIPTION\_ID | Subscription ID          |       |
+
+---
 
 ## Create Azure AD L0 App
 
