@@ -10,6 +10,8 @@ Rover allows you to seamlessly run your landing zones in a team of developers an
 
 In the examples below we will use service principals to authenticate to the Azure subscriptions.
 
+The reusable GitHub workflows used by the platform starter now also support GitHub OIDC via `azure/login@v2`. For that flow, set the repository variable `CAF_AUTH_MODE=oidc` and configure federated credentials on the Azure application. See [bootstrap account provisioning](../enterprise/bootstrap_account_provisioning.md) and [platform starter GitHub setup](../../../caf-terraform-landingzones-platform-starter/getting-started/github.md).
+
 ## Getting started with GitHub Actions
 
 In GitHub Actions, you specify your pipelines configuration for your repo into the sub-folders ```/.github/worklows``` in our example, we specify it for pull requests validation as follow:

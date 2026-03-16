@@ -26,7 +26,7 @@ on:
       AZURE_TENANT_ID:
         required: true
       AZURE_LAUNCHPAD_SUBSCRIPTION_ID:
-        required: true
+        required: false
       AZURE_MANAGEMENT_SUBSCRIPTION_ID:
         required: false
       AZURE_CONNECTIVITY_SUBSCRIPTION_ID:
@@ -58,6 +58,9 @@ jobs:
   rover:
     name: Generate configuration files
     runs-on: [self-hosted, platform]
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
       
@@ -67,24 +70,40 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
 
+      - name: Resolve launchpad subscription secret
+        id: subscription
+        shell: bash
+        run: |
+          subscription_id="${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}"
+          if [ -z "${subscription_id}" ]; then
+            subscription_id="${{ secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID }}"
+          fi
+
+          if [ -z "${subscription_id}" ]; then
+            echo "One of AZURE_MANAGEMENT_SUBSCRIPTION_ID or AZURE_LAUNCHPAD_SUBSCRIPTION_ID must be configured."
+            exit 1
+          fi
+
+          echo "subscription_id=${subscription_id}" >> "${GITHUB_OUTPUT}"
+
       - name: 'Azure Login'
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+          subscription-id: ${{ steps.subscription.outputs.subscription_id }}
 
       - name: Create defnition files
         run: |
           rm -rf ./landingzones
           git clone -b ${{ inputs.terraform_code_ref }} --single-branch ${{ inputs.terraform_code_repository }} ./landingzones
           
+          auth_mode_var=$(echo "${{ vars.CAF_AUTH_MODE }}" | tr '[:upper:]' '[:lower:]' | xargs)
+          auth_mode="${auth_mode_var:-legacy_secret}"
+
           cred_vault_name=$(az keyvault list --query "[?(tags.caf_identity_aad_key=='cred_level0' && tags.caf_environment=='${{ inputs.environment }}')].{name:name}[0]" -o tsv)
-          if [ "${cred_vault_name}" != ''  ]; then
+          if [ "${cred_vault_name}" != '' ] && [ "${auth_mode}" != "oidc" ]; then
             sp_keyvault_url="https://${cred_vault_name}.vault.azure.net/"
-            
-            # Test permissions
-            az keyvault secret show --id ${sp_keyvault_url}/secrets/sp-client-id --query 'value' -o tsv  --only-show-errors | read CLIENT_ID
 
             if [ ! -z "${tenant}" ]; then
                 export ARM_TENANT_ID=${tenant}
@@ -96,6 +115,8 @@ jobs:
             export ARM_CLIENT_SECRET=$(az keyvault secret show --id ${sp_keyvault_url}/secrets/sp-client-secret --query 'value' -o tsv --only-show-errors)
 
             az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}  --only-show-errors 1> /dev/null
+          elif [ "${auth_mode}" = "oidc" ]; then
+            echo "auth_mode=oidc -> using current OIDC session, skipping SP secret impersonation."
           fi
 
           ansible-playbook $(readlink -f ./landingzones/templates/ansible/walk-through-bootstrap.yaml) \

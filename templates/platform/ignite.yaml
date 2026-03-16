@@ -1,7 +1,10 @@
 bootstrap:
   azuread_identity_mode: service_principal
-  # Bootstrap authentication contract selector (PR1 contract-only)
-  auth_mode: legacy_secret
+  # Authentication mode for CI/CD pipelines.
+  # oidc (recommended): workload identity federation - no client secrets stored in GitHub.
+  # legacy_secret: SP client secret stored in Key Vault (traditional approach).
+  # hybrid: OIDC login + optional SP impersonation fallback from Key Vault.
+  auth_mode: oidc
   enable_azuread_groups: True
   enable_azuread_applications: True
 

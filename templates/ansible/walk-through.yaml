@@ -60,7 +60,7 @@
     ignore_unknown_extensions: true
     files_matching: "ignite.yaml"
 
-- name: Normalize bootstrap.auth_mode (PR1 contract-only)
+- name: Normalize bootstrap.auth_mode
   set_fact:
     bootstrap_auth_mode: "{{ (bootstrap.auth_mode | default(bootstrap.bootstrap.auth_mode | default('legacy_secret'))) | string | trim | lower }}"
 
@@ -69,7 +69,7 @@
     that:
       - bootstrap_auth_mode in ['legacy_secret', 'oidc', 'hybrid']
     fail_msg: "Invalid bootstrap.auth_mode='{{ bootstrap_auth_mode }}'. Allowed values: legacy_secret, oidc, hybrid."
-    success_msg: "bootstrap.auth_mode='{{ bootstrap_auth_mode }}' validated (contract-only)."
+    success_msg: "bootstrap.auth_mode='{{ bootstrap_auth_mode }}' is valid."
 
 - set_fact:
     caf_environment: "{{ TF_VAR_environment }}"
