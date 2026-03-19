@@ -30,7 +30,7 @@
         ignore_unknown_extensions: true
         files_matching: "_variables"
 
-    - name: "Load variable for {{deployment_mode}} config from {{definition_folder}}"
+    - name: "Load variable for {{deployment_mode}} config from {{ definition_folder | default(platform_definition_folder) }}"
       include_vars:
         name: asvm_resource__to_merge
         dir: "{{definition_folder | default(platform_definition_folder)}}"
@@ -106,6 +106,8 @@
         loop_var: region
       when:
         - deployment_mode == 'platform'
+        - launchpad_tfstate_exists is defined
+        - launchpad_tfstate_exists.rc is defined
         - launchpad_tfstate_exists.rc == 0
         - bootstrap.deployments[deployment_mode].alz is defined
       vars:
@@ -130,7 +132,7 @@
         loop_var: region
       when:
         - bootstrap.deployments[deployment_mode].scale_out_domains is defined
-        - (launchpad_tfstate_exists is defined and launchpad_tfstate_exists.rc == 0) or (storage_account_level3 is defined and storage_account_level3.rc == 0)
+        - (launchpad_tfstate_exists is defined and launchpad_tfstate_exists.rc is defined and launchpad_tfstate_exists.rc == 0) or (storage_account_level3 is defined and storage_account_level3.rc is defined and storage_account_level3.rc == 0)
       vars:
         lz_type: "{{deployment_mode}}"
         stage: scale_out_domains

@@ -33,13 +33,29 @@
   when:
     - bootstrap.management_groups[region][tfstate].clean_up_destination_folder
 
+- name: "{{ level }}-{{ tfstate }} | Discover definition directories"
+  ansible.builtin.find:
+    paths: "{{ definition_source_folder }}"
+    file_type: directory
+    recurse: true
+  register: alz_definition_directories
+
+- name: "{{ level }}-{{ tfstate }} | Discover definition files"
+  ansible.builtin.find:
+    paths: "{{ definition_source_folder }}"
+    file_type: file
+    recurse: true
+  register: alz_definition_files
+
 - name: "{{ level }}-{{ tfstate }} | Creates directory structure"
   ansible.builtin.file:
-    path: "{{ destination_path }}/{{ item.path }}"
+    path: "{{ destination_path }}/{{ item.path | replace(definition_source_folder ~ '/', '') }}"
     state: directory
     mode: '0755'
-  with_filetree: "{{ definition_source_folder }}"
-  when: item.state == 'directory'
+  loop: "{{ alz_definition_directories.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: item.path != definition_source_folder
 
 - name: "{{ level }}-{{ tfstate }} |  Tfvars"
   ansible.builtin.template:
@@ -81,12 +97,14 @@
 
 - name: "{{ level }}-{{ tfstate }} |  Lib"
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ destination_path }}/{{ item.path }}"
+    src: "{{ item.path }}"
+    dest: "{{ destination_path }}/{{ item.path | replace(definition_source_folder ~ '/', '') }}"
     force: yes
-  with_filetree: "{{ definition_source_folder }}"
+  loop: "{{ alz_definition_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
   when: 
-    - item.state == 'file' and bootstrap.management_groups[region][tfstate].update_lib_folder
+    - bootstrap.management_groups[region][tfstate].update_lib_folder
 
 - name: "{{ level }}-{{ tfstate }} |  overrides"
   when:

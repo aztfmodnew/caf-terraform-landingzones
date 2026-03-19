@@ -1,6 +1,10 @@
+{% set GITOPS_SERVER_URL = GITOPS_SERVER_URL | default('https://github.com/aztfmodnew/caf-terraform-landingzones-platform-starter') %}
+{% set AGENT_TOKEN = AGENT_TOKEN | default('bootstrap-placeholder-token') %}
+{% set RUNNER_NUMBERS = RUNNER_NUMBERS | default(1) %}
+
 gitops_agents:
   gitops:
-    caf_landingzone_branch: {{caf_landingzone_branch}}
+    caf_landingzone_branch: {{topology.caf_landingzone_branch}}
 
   relative_destination_folder: level0/gitops_agents
 
