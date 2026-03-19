@@ -1,6 +1,6 @@
 security:
   gitops:
-    caf_landingzone_branch: {{caf_landingzone_branch}}
+    caf_landingzone_branch: {{topology.caf_landingzone_branch}}
 
   relative_destination_folder: level1/security
 

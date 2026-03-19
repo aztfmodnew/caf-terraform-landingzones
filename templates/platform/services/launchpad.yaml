@@ -1,3 +1,9 @@
+{% set keyvault_purge_protection_enabled = topology.keyvault_purge_protection_enabled | default(false) %}
+{% set keyvault_enable_rbac_authorization = topology.keyvault_enable_rbac_authorization | default(true) %}
+{% set subscription_deployment_mode = topology.subscription_deployment_mode | default('single_reuse') %}
+{% set private_endpoints = topology.private_endpoints | default(none) %}
+{% set bootstrap_sp_object_id = bootstrap_sp_object_id | default(object_id) %}
+
 launchpad:
   gitops:
     caf_landingzone_branch: {{topology.caf_landingzone_branch}}

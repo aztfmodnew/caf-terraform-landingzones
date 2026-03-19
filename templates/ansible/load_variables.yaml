@@ -59,6 +59,7 @@
 - name: tfstate - platform_subscriptions from subscriptions to variable
   include_tasks: "get_tfstate_content.yaml"
   when:
+    - deployment_mode == 'platform'
     - resources.subscription_deployment_mode == 'multiple_subscriptions'
   vars:
     env: ''
@@ -66,7 +67,6 @@
     resource_type: subscriptions
     caf_level: level1
     exported_variable_name: platform_subscriptions
-  when: deployment_mode == 'platform'
 
 # Private DNS zones
 - name: tfstate - private dns zones to variable

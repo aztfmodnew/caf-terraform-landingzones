@@ -5,7 +5,7 @@
     - "{{region}}"
     - "{{service}}"
     
-- name: "{{destination_alz_path}} - Set tfstate_object"
+- name: "{{ destination_path }}/{{ stage }}/{{ service }} - Set tfstate_object"
   set_fact:
     tfstate_object: "{{resources['alz_' + service].tfstate}}"
 
@@ -29,15 +29,15 @@
 
 - name: "{{destination_alz_path}} - Set landingzone file_path"
   set_fact:
-    mg: "{{ lookup('template', '{{ template_lib_folder }}/archetype_config_overrides.caf.platform.yaml') | from_yaml }}"
-    mg_custom: "{{ lookup('template', '{{ template_lib_folder }}/custom_landing_zones.caf.platform.yaml') | from_yaml  }}"
+    mg: "{{ lookup('template', template_lib_folder + '/archetype_config_overrides.caf.platform.yaml') | from_yaml }}"
+    mg_custom: "{{ lookup('template', template_lib_folder + '/custom_landing_zones.caf.platform.yaml') | from_yaml  }}"
 
 - debug:
-  msg:
-  - "{{destination_alz_path}}"
-  - "alz_library_source={{ alz_library_source }}"
-  - "enable_amba={{ enable_amba }}"
-  - "enable_slz={{ enable_slz }}"
+    msg:
+    - "{{destination_alz_path}}"
+    - "alz_library_source={{ alz_library_source }}"
+    - "enable_amba={{ enable_amba }}"
+    - "enable_slz={{ enable_slz }}"
 
 - name: "Clean-up destination directory"
   ansible.builtin.file:
@@ -46,23 +46,40 @@
   when:
     - topology.management_groups[region][service].clean_up_destination_folder | default(True)
 
+- name: "{{ destination_alz_path }} - Discover ALZ library directories"
+  ansible.builtin.find:
+    paths: "{{ template_lib_folder }}"
+    file_type: directory
+    recurse: true
+  register: alz_library_directories
+
+- name: "{{ destination_alz_path }} - Discover ALZ library files"
+  ansible.builtin.find:
+    paths: "{{ template_lib_folder }}"
+    file_type: file
+    recurse: true
+  register: alz_library_files
+
 - name: "Creates directory structure - {{template_lib_folder}}"
   ansible.builtin.file:
-    path: "{{ destination_alz_path }}/lib/{{ item.path }}"
+    path: "{{ destination_alz_path }}/lib/{{ item.path | replace(template_lib_folder ~ '/', '') }}"
     state: directory
     mode: '0755'
-  with_filetree: "{{ template_lib_folder }}"
+  loop: "{{ alz_library_directories.files }}"
+  loop_control:
+    label: "{{ item.path }}"
   when:
-    - item.state == 'directory'
+    - item.path != template_lib_folder
 
 - name: "  Lib"
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ destination_alz_path }}/lib/{{ item.path }}"
+    src: "{{ item.path }}"
+    dest: "{{ destination_alz_path }}/lib/{{ item.path | replace(template_lib_folder ~ '/', '') }}"
     force: yes
-  with_filetree: "{{ template_lib_folder }}"
+  loop: "{{ alz_library_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
   when: 
-    - item.state == 'file'
     - item.path is not search(".j2")
     - item.path is not search(".yaml") or item.path is search(".json") or item.path is search(".md")
     - topology.management_groups[region][service].update_lib_folder | default(True)
@@ -70,12 +87,13 @@
 
 - name: "  Lib"
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ destination_alz_path }}/{{ item.path }}"
+    src: "{{ item.path }}"
+    dest: "{{ destination_alz_path }}/{{ item.path | replace(template_lib_folder ~ '/', '') }}"
     force: yes
-  with_filetree: "{{ template_lib_folder }}"
+  loop: "{{ alz_library_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
   when: 
-    - item.state == 'file'
     - item.path is search(".yaml")
     - topology.management_groups[region][service].update_lib_folder | default(True)
 

@@ -83,6 +83,20 @@
     platform_service_folder: "{{ public_templates_folder }}/platform/services"
     public_templates_variables_folder: "{{ public_templates_folder }}/variables"
 
+- name: Promote rendered topology keys to play scope
+  set_fact: "{{ topology }}"
+
+- name: Normalize path variables from base_folder
+  set_fact:
+    bootstrap_file: "{{ base_folder }}/platform/definition/ignite.yaml"
+    landingzones_folder: "{{ base_folder }}/landingzones"
+    public_templates_folder: "{{ base_folder }}/landingzones/templates"
+    private_templates_folder: "{{ base_folder }}/platform/templates"
+    platform_configuration_folder: "{{ base_folder }}/platform/configuration"
+    platform_definition_folder: "{{ base_folder }}/platform/definition"
+    platform_template_folder: "{{ base_folder }}/platform/template"
+    firewall_rules_path: "{{ base_folder }}/platform/firewall_rules"
+
 - name: "Creates directory - {{destination_path}}"
   file:
     path: "{{destination_path}}"
@@ -173,6 +187,12 @@
     file_type: file
   register: github_workflows_to_process
 
+- name: "Creates destination directory - {{ base_folder }}/.github/workflows"
+  ansible.builtin.file:
+    path: "{{ base_folder }}/.github/workflows"
+    state: directory
+    mode: '0755'
+
 - name: copy github workflows
   ansible.builtin.template:
     src: "{{ item.path }}"
@@ -210,15 +230,15 @@
     file_type: file
   register: platform_service_template_files_to_process
 
-- name: "Creates destination directory - {{topology.private_templates_folder}}"
+- name: "Creates destination directory - {{ base_folder }}/platform/templates"
   file:
-    path: "{{topology.private_templates_folder}}"
+    path: "{{ base_folder }}/platform/templates"
     state: directory
 
 - name: copy public platform templates
   ansible.builtin.copy:
     src: "{{ item.path }}"
-    dest: "{{topology.private_templates_folder}}/{{ item.path | regex_replace(platform_service_folder, '') }}"
+    dest: "{{ base_folder }}/platform/templates/{{ item.path | regex_replace(platform_service_folder, '') }}"
   loop: "{{platform_service_template_files_to_process.files}}"
 
 
@@ -236,4 +256,4 @@
   ansible.builtin.template:
     src: "{{platform_service_folder}}/README.md"
     dest: "{{destination_path}}/GETTING-STARTED.md"
-  
+
